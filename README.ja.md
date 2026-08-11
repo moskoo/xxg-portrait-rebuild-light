@@ -9,9 +9,9 @@
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
 </p>
-<p align="center">
+
 English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
-</p>
+
 
 `xxg-portrait-rebuild-light` は、既存のポートレート写真を対象とする image edit Skill です。ディレクター視点のライティング設計により、キーライト、フィルライト、影、背景の雰囲気を再構築しながら、清潔で健康的な、低コントラストの写真的な肌の微細質感を回復します。
 

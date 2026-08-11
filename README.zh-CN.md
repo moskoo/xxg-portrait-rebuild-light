@@ -9,9 +9,9 @@
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
 </p>
-<p align="center">
+
 English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
-</p>
+
 
 `xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。它以“导演式布光”重建主光、补光、阴影和背景氛围，同时恢复干净、健康、低对比的真实皮肤微纹理。
 
