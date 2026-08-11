@@ -1,6 +1,17 @@
-# xxg-portrait-rebuild-light
-
-[English](README.md) | 简体中文 | [日本語](README.ja.md) | [한국어](README.ko.md)
+<div align="center">
+  <img src="assets/skill-icon.png" width="120" alt="xxg-portrait-rebuild-light skill-logo">
+</div>
+<h1 align="center">XXG Portrait Rebuild Light</h1>
+<p align="center">
+  <a href=""><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="License-Apache"></a>
+  <a href=""><img src="https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square" alt="Python"></a>
+  <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
+  <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
+  <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
+</p>
+<p align="center">
+English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
+</p>
 
 `xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。它以“导演式布光”重建主光、补光、阴影和背景氛围，同时恢复干净、健康、低对比的真实皮肤微纹理。
 
