@@ -3,7 +3,7 @@
 </div>
 <h1 align="center">XXG Portrait Rebuild Light</h1>
 <p align="center">
-  <a href=""><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="License-Apache"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="MIT License"></a>
   <a href=""><img src="https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square" alt="Python"></a>
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
@@ -258,3 +258,9 @@ Broad skylight illuminates the person. Sparse tree shadows break softly across f
 - [Lighting, skin, color-temperature, and atmosphere recipes](references/lighting-skin-color-temperature-recipes.md)
 - [Backend capability notes](references/backend-and-clean-realism.md)
 - [Python dependencies](requirements.txt)
+- [Contributing guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
+## License
+
+Licensed under the [MIT License](LICENSE).

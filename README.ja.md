@@ -3,7 +3,7 @@
 </div>
 <h1 align="center">XXG Portrait Rebuild Light</h1>
 <p align="center">
-  <a href=""><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="License-Apache"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="MIT License"></a>
   <a href=""><img src="https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square" alt="Python"></a>
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
@@ -259,3 +259,9 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + T1 + 
 - [光・肌・色温度・雰囲気レシピ](references/lighting-skin-color-temperature-recipes.md)
 - [バックエンド機能の説明](references/backend-and-clean-realism.md)
 - [Python 依存関係](requirements.txt)
+- [コントリビューションガイド](CONTRIBUTING.md)
+- [変更履歴](CHANGELOG.md)
+
+## ライセンス
+
+本プロジェクトは [MIT License](LICENSE) の下で提供されます。

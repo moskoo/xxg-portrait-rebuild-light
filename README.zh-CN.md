@@ -3,7 +3,7 @@
 </div>
 <h1 align="center">XXG Portrait Rebuild Light</h1>
 <p align="center">
-  <a href=""><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="License-Apache"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="MIT License"></a>
   <a href=""><img src="https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square" alt="Python"></a>
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
@@ -259,3 +259,9 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 - [光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)
 - [后端能力说明](references/backend-and-clean-realism.md)
 - [Python 依赖](requirements.txt)
+- [贡献指南](CONTRIBUTING.md)
+- [更新日志](CHANGELOG.md)
+
+## 许可证
+
+本项目采用 [MIT 许可证](LICENSE)。

@@ -3,11 +3,11 @@
 </div>
 <h1 align="center">XXG Portrait Rebuild Light</h1>
 <p align="center">
-  <a href=""><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="License-Apache"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-red?style=flat-square" alt="MIT License"></a>
   <a href=""><img src="https://img.shields.io/badge/Python-3.10+-blue.svg?style=flat-square" alt="Python"></a>
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
-  <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
+  <a href=""><img   src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | 한국어
@@ -258,3 +258,9 @@ $xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + S1 + T1 + A2로 
 - [조명·피부·색온도·분위기 레시피](references/lighting-skin-color-temperature-recipes.md)
 - [백엔드 기능 설명](references/backend-and-clean-realism.md)
 - [Python 의존성](requirements.txt)
+- [기여 가이드](CONTRIBUTING.md)
+- [변경 기록](CHANGELOG.md)
+
+## 라이선스
+
+이 프로젝트는 [MIT License](LICENSE)로 배포됩니다.
