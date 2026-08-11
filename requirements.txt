@@ -1,0 +1,2 @@
+# Read-only image loading, mask validation, and pixel-region audits only.
+Pillow>=9.1.0

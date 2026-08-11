@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "source_image": "/absolute/path/source.png",
+  "source_size": [1672, 941],
+  "delivery_mode": "strict-final",
+  "backend": {
+    "id": "verified-local-editor",
+    "classification": "strict-local",
+    "capabilities": {
+      "preexisting_exposed_tool": true,
+      "semantic_image_edit": true,
+      "edit_mask": true,
+      "frozen_pixel_passthrough": true,
+      "exact_canvas": true,
+      "local_result_file": true
+    }
+  },
+  "inventory_complete": true,
+  "inventory_method": "full-frame-3x3-tile-sweep",
+  "reviewed_tiles": [
+    "r1c1", "r1c2", "r1c3",
+    "r2c1", "r2c2", "r2c3",
+    "r3c1", "r3c2", "r3c3"
+  ],
+  "protected_item_count": 2,
+  "inventory_counts": {
+    "identity-boundary": 1,
+    "text": 1
+  },
+  "protected_items": [
+    {
+      "id": "eyes-and-eyelids",
+      "category": "identity-boundary",
+      "description": "双眼、虹膜和眼睑边缘",
+      "tile_ids": ["r1c2", "r2c2"],
+      "bbox": [500, 300, 820, 440],
+      "mask_path": "/absolute/path/eyes-mask.png",
+      "protection": "frozen",
+      "required_audit": true
+    },
+    {
+      "id": "handheld-book",
+      "category": "text",
+      "description": "人物手持且带印刷文字的书本",
+      "tile_ids": ["r2c2"],
+      "bbox": [650, 405, 750, 535],
+      "protection": "frozen",
+      "required_audit": true
+    }
+  ],
+  "editable_mask": "/absolute/path/editable-mask.png",
+  "protected_mask": "/absolute/path/protected-mask.png",
+  "perceptual_targets": [
+    {
+      "id": "lighting-direction",
+      "required": true,
+      "acceptance_view": "完整画面和100%脸部对比",
+      "exposure_intent": "source-matched",
+      "fill_policy": "ambient-reflection",
+      "shadow_policy": "retained-detail",
+      "highlight_policy": "retained",
+      "acceptance_criterion": "主光方向、曝光意图、阴影深度和高光滚降均可辨且物理一致，不新增光源、接缝或假立体"
+    },
+    {
+      "id": "clean-skin-realism",
+      "required": true,
+      "acceptance_view": "正常观看和像素尺度规定的放大倍率",
+      "acceptance_criterion": "皮肤改善可辨且仍干净连续，无脏化、颗粒、斑驳或塑料感"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": 8,
+  "invocation_evidence_contract": {
+    "initial_state": {
+      "tool_discovery_completed": false,
+      "discovered_image_tool_names": [],
+      "selected_image_tool_name": null,
+      "native_invocation_attempted": false,
+      "delivery_decision_allowed": false
+    },
+    "tool_discovery_required": true,
+    "codex_preferred_callable": "image_gen__imagegen",
+    "codex_preferred_tool_member": "tools.image_gen__imagegen",
+    "edit_source_argument": "referenced_image_paths",
+    "forbidden_guessed_tool_members": [
+      "tools.image_gen"
+    ],
+    "forbidden_guessed_arguments": [
+      "input_image"
+    ],
+    "native_invocation_attempted_definition": "A callable discovered in the current tool registry was actually invoked; invalid local member access does not count.",
+    "success_requires": [
+      "image_tool_call_record",
+      "returned_image_artifact_or_result"
+    ],
+    "failure_requires": [
+      "image_tool_call_record",
+      "explicit_error_payload_from_same_call"
+    ],
+    "not_invoked_requires": [
+      "tool_discovery_completed",
+      "no_compatible_image_generation_or_edit_tool_found",
+      "selected_image_tool_name_is_null"
+    ],
+    "dispatch_error_requires_retry": [
+      "undiscovered_or_missing_tool_member",
+      "guessed_argument_name",
+      "local_type_error_before_real_image_tool_call"
+    ],
+    "execution_context_is_not_capability_evidence": [
+      "direct_user_turn",
+      "background_thread",
+      "delegation_message"
+    ],
+    "not_invoked_delivery_mode": "invocation-handoff",
+    "explicit_failure_delivery_mode": "prompt-only",
+    "result_failure_delivery_mode": "prompt-handoff"
+  },
+  "strict_local_required_capabilities": [
+    "preexisting_exposed_tool",
+    "semantic_image_edit",
+    "edit_mask",
+    "frozen_pixel_passthrough",
+    "exact_canvas",
+    "local_result_file"
+  ],
+  "profiles": {
+    "host-native-imagegen": {
+      "match_when": {
+        "route": "host-native-imagegen-skill",
+        "skill_or_capability": "imagegen",
+        "codex_callable": "image_gen__imagegen",
+        "edit_source_argument": "referenced_image_paths",
+        "built_in_mode": true,
+        "accepts_whole_image_reference": true,
+        "accepts_edit_mask": false
+      },
+      "classification": "full-frame-generative",
+      "capabilities": {
+        "preexisting_exposed_tool": true,
+        "semantic_image_edit": true,
+        "edit_mask": false,
+        "frozen_pixel_passthrough": false,
+        "exact_canvas": false,
+        "local_result_file": true
+      },
+      "strict_final_allowed": false,
+      "best_effort_allowed": true
+    }
+  },
+  "full_frame_risk_flags": [
+    "face_height_lt_256",
+    "complex_scene",
+    "protected_text_or_product",
+    "multiple_people",
+    "subject_touches_edge"
+  ]
+}

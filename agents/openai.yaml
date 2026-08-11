@@ -1,0 +1,4 @@
+interface:
+  display_name: "XXG 人像真实光影重建"
+  short_description: "用短促导演提示重建真实人像光影与干净肤质"
+  default_prompt: "使用 $xxg-portrait-rebuild-light 以一个明确主光、一个可选氛围和四行短提示重建这张人像的真实光影与干净肤质。"
