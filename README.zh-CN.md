@@ -31,6 +31,11 @@
 - 当前智能体没有 image edit 能力，或生成结果没有达到目标时，直接输出一段紧凑完整提示词；
 - 禁止用 Pillow、NumPy、OpenCV、ImageMagick 或临时滤镜脚本制作交付图片。
 
+![演示图片](/assets/skill-demo1.jpg "skill-demo")
+![演示图片](/assets/skill-demo2.jpg "skill-demo")
+![演示图片](/assets/skill-demo3.jpg "skill-demo")
+![演示图片](/assets/skill-demo4.jpg "skill-demo")
+
 ## 核心方法
 
 Skill 先在内部完成导演式决策：

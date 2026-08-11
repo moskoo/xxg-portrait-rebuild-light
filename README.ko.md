@@ -16,6 +16,11 @@
 
 인물을 다시 그리는 것이 아니라 조명을 바꾸는 데 중점을 둡니다. 동일 인물, 기존 얼굴 구조와 비율, 자연스러운 미세 비대칭, 표정, 자세, 카메라 시점, 구도를 유지하며 플라스틱 피부, 거친 입자 피부, 지저분한 색 얼룩, 주름을 과장해 만든 가짜 입체감을 방지합니다.
 
+![演示图片](/assets/skill-demo1.jpg "skill-demo")
+![演示图片](/assets/skill-demo2.jpg "skill-demo")
+![演示图片](/assets/skill-demo3.jpg "skill-demo")
+![演示图片](/assets/skill-demo4.jpg "skill-demo")
+
 ## 주요 기능
 
 - 플라스틱처럼 매끈한 피부, 과도한 보정, 밀랍 인형 같은 질감을 수정합니다.

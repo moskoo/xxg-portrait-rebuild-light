@@ -31,6 +31,11 @@
 - image edit 機能がない場合、または編集結果が目標未達の場合は、完全で簡潔な image edit プロンプトを直接出力。
 - Pillow、NumPy、OpenCV、ImageMagick、仮設フィルタースクリプトで納品画像を作成しない。
 
+![演示图片](/assets/skill-demo1.jpg "skill-demo")
+![演示图片](/assets/skill-demo2.jpg "skill-demo")
+![演示图片](/assets/skill-demo3.jpg "skill-demo")
+![演示图片](/assets/skill-demo4.jpg "skill-demo")
+
 ## 基本方式
 
 Skill は最初に内部でディレクター式の判断を行います。
