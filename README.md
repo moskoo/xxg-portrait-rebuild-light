@@ -30,6 +30,11 @@ The skill changes the lighting without redrawing the person. It preserves identi
 - If the current agent has no image-edit capability, or the edit misses the target, returns one complete compact image-edit prompt.
 - Never uses Pillow, NumPy, OpenCV, ImageMagick, or temporary filter scripts to produce the delivered image.
 
+![演示图片](/assets/skill-demo1.jpg "skill-demo")
+![演示图片](/assets/skill-demo2.jpg "skill-demo")
+![演示图片](/assets/skill-demo3.jpg "skill-demo")
+![演示图片](/assets/skill-demo4.jpg "skill-demo")
+
 ## Core method
 
 The skill first makes a director-style lighting decision internally:
