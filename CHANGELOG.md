@@ -6,6 +6,7 @@ Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project 
 
 ### Added
 
+- `A6` full-black backlit subject silhouette recipe with forced silhouette exposure and dedicated validation rules.
 - MIT license and contribution guidelines.
 - English, Simplified Chinese, Japanese, and Korean documentation links for ongoing maintenance.
 - GitHub discovery topics for agent skills, image editing, prompt engineering, and relighting.

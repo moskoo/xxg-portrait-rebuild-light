@@ -22,7 +22,7 @@ The skill changes the lighting without redrawing the person. It preserves identi
 - Preserves original lip lines, eye-area detail, restrained sebum highlights, and scale-appropriate microtexture.
 - Repairs weak backlighting, disconnected indoor window light, flat lighting, unintended crushed shadows, and highlights with no physical source.
 - Supports soft window light, commercial soft light, Rembrandt lighting, cinematic low-key lighting, golden hour, dual-color neon, and diagonal hard light.
-- Adds at most one physically coherent atmosphere effect: window shadow, tree shadow, background bokeh, sunset flare, or subtle volumetric light.
+- Adds at most one physically coherent atmosphere effect: window shadow, tree shadow, background bokeh, sunset flare, subtle volumetric light, or a full-black backlit subject silhouette.
 - Controls subject and background in layers: key light and exposure intent first, then fill, shadows, ambient light, and color temperature.
 - Preserves identity, facial feature size and position, expression, pose, wardrobe, background structure, and source framing.
 - Reduces the skin-detail target automatically when the face is small, without canceling the requested lighting change.
@@ -55,6 +55,8 @@ Constraints: no identity change, beauty reshaping, smoothing, grain overlay, dir
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.
 
 Physical lighting takes priority over keeping every detail visible. The skill selects an exposure intent from `source-matched`, `balanced`, `highlight-priority`, `shadow-priority`, `low-key`, `silhouette`, and `high-key`. Sunset backlight may naturally darken the unlit side of the face or create a partial silhouette. Low-key and hard lighting may contain near-black shadows. Fill is used only when information that should remain readable is lost without a plausible cause.
+
+`A6` is a forced override: whenever selected, it switches to silhouette exposure, moves the effective light behind the person, removes all fill and catchlights, and renders the entire subject interior black. The selected L and T recipes control only the backlight and background response; the S recipe is not rendered visibly.
 
 ## Recipes
 
@@ -110,6 +112,7 @@ one L lighting recipe + one S skin recipe + one T color-temperature recipe + zer
 | `A3` | Soft bokeh restricted to the defocused background |
 | `A4` | Gentle lens flare aligned with the sunset direction |
 | `A5` | Very subtle volumetric light with sparse dust motes |
+| `A6` | Force the entire backlit subject to a clean black silhouette; no face, skin, hair, or clothing detail remains visible inside |
 
 See [Lighting, skin, color-temperature, and atmosphere recipes](references/lighting-skin-color-temperature-recipes.md) for detailed prompt clauses.
 
@@ -226,6 +229,13 @@ Use $xxg-portrait-rebuild-light to edit this night portrait with L11 + S1 + T4 +
 Separate the cyan rim light clearly from the magenta key while preserving a natural skin-tone zone in the center of the face. Keep bokeh only in the defocused background, never over the eyes or skin.
 ```
 
+### Full-black backlit silhouette
+
+```text
+Use $xxg-portrait-rebuild-light to edit this portrait with L10 + S1 + T2 + A6.
+Place the effective light behind the person and expose for the bright background. Remove all frontal and side fill, catchlights, and internal subject illumination. Render the face, skin, hair, clothing, and body as one clean continuous black silhouette while preserving the original outer contour, proportions, pose, camera view, and composition.
+```
+
 ### Soft window light with window shadow
 
 ```text
@@ -249,6 +259,7 @@ Broad skylight illuminates the person. Sparse tree shadows break softly across f
 - Skin remains fair, healthy, clean, and continuous, with low-contrast photographic microtexture that is never rough or blotchy.
 - Grain, chromatic noise, dirty gray shadows, local oversharpening, and exaggerated wrinkles are not used to imitate realism.
 - Window shadows, tree shadows, bokeh, sunset flare, and light beams have a plausible source and landing area.
+- With `A6`, the complete subject interior is clean black with no facial, skin, hair, clothing, or catchlight detail; identity continuity is judged from the preserved outer contour, proportions, pose, and framing.
 - Preserve composition, orientation, aspect ratio, and the subject's share of the frame. Proportional downscaling to an image model's maximum resolution is allowed; exact source pixel dimensions are not required.
 
 ## Related files

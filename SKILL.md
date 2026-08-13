@@ -1,6 +1,6 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Edit an existing JPG, JPEG, PNG, or WebP portrait with concise director-style relighting and clean photographic skin texture while preserving identity, natural facial asymmetry, facial proportions, expression, composition, and source framing. Use for 真实肤质、去塑料感、光影重建、人物补光、逆光修复、自然窗光、窗影、树影、柔焦光斑、黄金时刻、霓虹光、摄影棚柔光、暗调写真, relight, or Higgsfield-Relight-like requests. Discover the host image-edit tool first; in Codex prefer image_gen__imagegen and pass local sources with referenced_image_paths. Never guess image_gen or input_image, never modify the delivered photo with local pixel scripts, and never refuse solely because the face is small or the scene is complex."
+description: "Edit an existing JPG, JPEG, PNG, or WebP portrait with concise director-style relighting and clean photographic skin texture while preserving identity, natural facial asymmetry, facial proportions, expression, composition, and source framing. Use for 真实肤质、去塑料感、光影重建、人物补光、逆光修复、自然窗光、窗影、树影、柔焦光斑、黄金时刻、霓虹光、摄影棚柔光、暗调写真、主体全黑剪影, relight, silhouette, or Higgsfield-Relight-like requests. Discover the host image-edit tool first; in Codex prefer image_gen__imagegen and pass local sources with referenced_image_paths. Never guess image_gen or input_image, never modify the delivered photo with local pixel scripts, and never refuse solely because the face is small or the scene is complex."
 ---
 
 # XXG 人像真实光影重建
@@ -72,7 +72,7 @@ Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露�
 4. `Shadow`：决定阴影硬度、深度、过渡宽度以及是否允许接近黑色；
 5. `Subject`：光如何跨过额头、眼周、鼻梁、面颊、颈肩与衣物；
 6. `Background`：背景亮度、反射和色温如何响应同一光源；
-7. `Atmosphere`：最多选择一种窗影、树影、柔焦光斑、夕阳光晕或轻微体积光。
+7. `Atmosphere`：最多选择一种窗影、树影、柔焦光斑、夕阳光晕、轻微体积光或 A6 主体全黑剪影。
 
 选择配方时读取 [光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)。每次只选：
 
@@ -81,6 +81,8 @@ Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露�
 ```
 
 不要同时堆叠柔窗光、伦勃朗光、硬光束、霓虹和夕阳。氛围效果必须服从主光，不可只贴在脸上。
+
+`A6` 是强制覆盖项，不是普通叠加效果。只要配方包含 `A6`，立即把曝光意图设为 `silhouette`，把有效主光置于人物后方，取消正面/侧面 Fill、眼神光和人物内部受光；脸、皮肤、头发、衣物与身体内部统一压成干净全黑，仅由明亮背景或背后光源显出原人物的完整外轮廓与姿态。此时 `A6` 覆盖 L 中关于人物正面受光的描述，S 只保留为配方记录、不要求纹理可见，T 只控制背景与轮廓附近光色。
 
 ## 紧凑提示词协议
 
@@ -109,6 +111,8 @@ Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露�
 
 保持人物身份、脸型轮廓、头脸比例、五官位置与大小、自然轻微不对称、表情、视线、发际线、姿势、相机视角、构图和原画幅。不要“完美对称化”、瘦脸、大眼、缩鼻、丰唇或重塑身体。
 
+选择 A6 时，内部五官会按授权消失在黑色剪影中；改用头部与发型外轮廓、肩颈关系、身体比例、姿态和人物占画位置判断结构保持，不得借剪影重塑轮廓或姿势。
+
 这些结构约束不等于原样复制。允许以下外观按目标光源发生明显变化：
 
 - 面部、耳、颈肩与可见皮肤的连续亮度、柔和阴影和镜面反射；
@@ -119,6 +123,8 @@ Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露�
 ## 干净真实肤质
 
 正常观看时先看到干净、柔和、健康的皮肤；合理放大后才看到微纹理。
+
+选择 A6 时，本节的肤质可见性要求暂停：所有可见皮肤必须与头发、衣物和身体一起落为均匀干净的黑色剪影，不显示肤色、毛孔、唇纹、眼周细节、妆面、眼神光或局部面光；这不算塑料皮或肤质失败。
 
 - 低频：保持原肤色基准与脸、耳、颈、上胸、锁骨的连续性，不漂白、不斑驳；
 - 中频：立体感来自宽缓受光渐变、自然遮挡与环境反射，不靠加深眼袋、法令纹、鼻翼沟、嘴角或颈纹；
@@ -145,6 +151,7 @@ Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露�
 - 低调与硬光：允许大面积深暗、接近黑色的阴影和少量高光溢出，只要边缘、落点和空间关系真实；深暗不等于脏灰。
 - 霓虹：青/洋红两侧光必须有清楚方向和亮度主次；未受光区域可以深暗，不能为了看清全脸而加入无来源白色补光。
 - 皮肤微纹理只要求在有效受光区域自然可见；处于剪影或深暗中的皮肤不必保留同等细节可见度。
+- `A6` 主体全黑剪影：优先级高于 L 的人物受光、Fill、catchlight 与 S 的肤质可见性；人物内部不得残留脸部、肤色、发丝、衣纹或饰品明暗细节，只允许极窄同源轮廓溢光且不能进入人物内部。
 
 ## 输出画幅
 
@@ -163,11 +170,11 @@ python3 "$XXG_SKILL_DIR/scripts/check_aspect_ratio.py" SOURCE_IMAGE EDITED_IMAGE
 按正常观看倍率先检查：
 
 1. 用户指定的主光方向、明暗关系或氛围效果是否直接可辨；
-2. 人物是否仍为同一身份，五官、表情、姿势和构图是否稳定；
+2. 人物是否仍为同一身份，五官、表情、姿势和构图是否稳定；A6 改查头发/头部外轮廓、头身比例、姿势和构图，不要求黑色内部五官可见；
 3. 主体、衣物和背景是否服从同一组光源与曝光意图；
-4. 皮肤是否干净连续、无塑料感，也无颗粒、色斑、脏灰与假立体；
+4. 皮肤是否干净连续、无塑料感，也无颗粒、色斑、脏灰与假立体；A6 改查人物内部是否完整、连续、干净地落为黑色；
 5. 窗影、树影、Bokeh、霓虹或光束是否具有物理落点，而非后期贴纸；
-6. 深暗、剪影或高光溢出是否由选定光位自然产生，而非被错误判成必须补亮的缺陷；
+6. 深暗、剪影或高光溢出是否由选定光位自然产生，而非被错误判成必须补亮的缺陷；A6 若仍可见面光、肤色、眼神光或衣物内部细节则判失败；
 7. 输出方向、宽高比、构图和人物占画比例是否合理；等比例缩小本身不是失败。
 
 结果近乎原图时，不再增加一串同义限制；改为加强唯一主光句和一个可观察目标。结果脏化时，删除颗粒、强对比、深邃皱褶等词，并替换为“干净连续肤色 + 低对比反射微纹理”。

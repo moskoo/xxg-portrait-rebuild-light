@@ -55,6 +55,7 @@
       "id": "lighting-direction",
       "required": true,
       "acceptance_view": "完整画面和100%脸部对比",
+      "atmosphere_recipe": "A0",
       "exposure_intent": "source-matched",
       "fill_policy": "ambient-reflection",
       "shadow_policy": "retained-detail",
