@@ -2,7 +2,13 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.3] - 2026-08-23
+
+### Changed
+
+- Reduced repeated runtime guidance and shortened model-facing prompts while preserving all lighting, skin, routing, validation, and A6 behaviors.
+
+## [1.0.2] - 2026-08-13
 
 ### Added
 

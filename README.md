@@ -43,13 +43,13 @@ The skill first makes a director-style lighting decision internally:
 Key light → Exposure intent → Fill → Shadow → Subject → Background → Atmosphere
 ```
 
-The prompt sent to the image model is compressed into four lines, usually 80–160 English words:
+The prompt sent to the image model is compressed into four lines, usually 40–90 English words:
 
 ```text
-Edit: keep the same person and composition; rebuild only lighting and skin rendering.
-Lighting: one key light + exposure intent + fill/shadow relation + background response + optional single atmosphere effect.
-Skin: clean, low-contrast photographic microtexture appropriate to the visible face scale.
-Constraints: no identity change, beauty reshaping, smoothing, grain overlay, dirty color variation, or background redraw.
+Edit: relight; keep the same person, structure, expression, pose, camera, and composition.
+Lighting: one key + exposure/shadow strategy + background response + optional atmosphere.
+Skin: clean low-contrast microtexture matched to visible face scale.
+Constraints: no identity change, smoothing, dirty texture, or background redraw.
 ```
 
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.

@@ -1,188 +1,117 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Edit an existing JPG, JPEG, PNG, or WebP portrait with concise director-style relighting and clean photographic skin texture while preserving identity, natural facial asymmetry, facial proportions, expression, composition, and source framing. Use for 真实肤质、去塑料感、光影重建、人物补光、逆光修复、自然窗光、窗影、树影、柔焦光斑、黄金时刻、霓虹光、摄影棚柔光、暗调写真、主体全黑剪影, relight, silhouette, or Higgsfield-Relight-like requests. Discover the host image-edit tool first; in Codex prefer image_gen__imagegen and pass local sources with referenced_image_paths. Never guess image_gen or input_image, never modify the delivered photo with local pixel scripts, and never refuse solely because the face is small or the scene is complex."
+description: "Relight an existing JPG, JPEG, PNG, or WebP portrait and restore clean photographic skin texture while preserving identity, natural asymmetry, proportions, expression, pose, composition, and framing. Use for 真实肤质、去塑料感、光影重建、人物补光、逆光修复、窗光/窗影、树影、Bokeh、黄金时刻、霓虹、影棚柔光、暗调写真、主体全黑剪影, relight, silhouette, or Higgsfield-Relight-like edits. Discover the host image-edit tool first; in Codex use discovered image_gen__imagegen with referenced_image_paths. Never guess image_gen/input_image, make the final with local pixel scripts, or refuse for small faces or complex scenes."
 ---
 
 # XXG 人像真实光影重建
 
 ## 目标
 
-把输入照片视为同一张摄影原片，对其做一次明确、克制的 image edit：
+把输入视为同一张摄影原片，只重建光影与皮肤呈现：
 
-- 保持同一人物、原有面部结构、自然不对称、表情、姿势、镜头与构图；
-- 重新组织主光、补光、阴影和背景氛围，使光线具有真实方向与空间响应；
-- 把塑料般平滑的皮肤恢复为干净、健康、低对比的相机微纹理；
-- 让变化在正常观看下可辨，但不靠改脸、颗粒、色差或粗糙处理制造效果。
+- 保持身份、自然不对称、面部结构与比例、表情、姿势、镜头和构图；
+- 用一个物理明确的主光统一人物、衣物与背景，允许符合曝光意图的深暗、溢出和剪影；
+- 让受光皮肤干净健康、低对比且有尺度相符的相机微纹理，不用颗粒、色差或加深皱褶制造真实感。
 
-光源物理效果优先于“所有内容都清楚”。根据光位与曝光意图，允许受光面明亮、背光面深暗、局部高光自然溢出、暗部接近黑色或主体形成合理剪影；不得用统一补光把逆光、低调或硬光重新抹平成平均曝光。
+目标变化必须在正常观看下可辨。不要为了“全部清楚”把逆光、低调或硬光补成平均曝光。
 
-## 先调用宿主原生图片能力
+## 调用宿主图片能力
 
-取得源图后，先读取当前智能体原生图片生成 Skill 的规则，再从当前工具注册表发现真实 callable。默认使用宿主自己的 image edit 能力，不直接拼装 API、CLI、SDK 或模型端点。
-
-### Codex 精确调用
-
-在 `functions.exec` 中先检查 `ALL_TOOLS`：
-
-```js
-const candidates = ALL_TOOLS.filter(({ name, description }) => {
-  const text = `${name} ${description || ""}`.toLowerCase();
-  return name === "image_gen__imagegen" ||
-    (text.includes("image") && (text.includes("generate") || text.includes("edit")));
-});
-const selected = candidates.find(({ name }) => name === "image_gen__imagegen");
-```
-
-发现 `image_gen__imagegen` 后，本地源图编辑只能使用：
+1. 查看源图并读取宿主原生图片生成/编辑 Skill。
+2. 从工具注册表发现真实 callable；Codex 从 `ALL_TOOLS` 查找，并优先选择准确名称 `image_gen__imagegen`。
+3. Codex 编辑本地源图只使用已发现工具及真实参数：
 
 ```js
 const result = await tools.image_gen__imagegen({
-  referenced_image_paths: ["/absolute/path/to/source.png"],
-  prompt: "紧凑的四行 image edit 提示词"
+  referenced_image_paths: ["/absolute/path/source.png"],
+  prompt: "四行紧凑 image edit 提示词"
 });
 generatedImage(result);
 ```
 
-禁止调用未经发现确认的 `tools.image_gen`，禁止猜测 `input_image`。错误函数名、错误参数或 JavaScript `TypeError` 属于调度错误；重新发现并按真实签名调用，不能据此声称工具不可用。
+禁止猜测 `tools.image_gen` 或 `input_image`。错误函数名、参数或 `TypeError` 是调度错误，应按真实签名重试，不能据此判定工具不可用。Claude、OpenClaw 等使用其注册表明确暴露的等价原生 image-edit 动作。
 
-Claude、OpenClaw 和其他智能体调用它们工具注册表中明确暴露的等价原生图片编辑动作。
+## 状态分流
 
-## 不拒绝，按真实状态分流
+| 状态 | 动作 |
+| --- | --- |
+| 发现兼容工具 | 必须调用；小脸、复杂背景、文字或主体触边只降低纹理目标，不停止生成 |
+| 正确工具真实调用失败 | 说明真实错误，进入 `prompt-only`，输出完整短提示词 |
+| 完成发现且无兼容工具 | 进入 `invocation-handoff`，输出完整短提示词 |
+| 已生成但近乎原图、改脸、脏化或光影失败 | 告知“本次图片结果未达到目标改善”，进入 `prompt-handoff`，从原图重编提示词 |
 
-- 发现兼容图片工具：必须调用；面部较小、复杂背景、文字、商品或主体触边只降低微纹理强度，不停止生成。
-- 正确图片工具真实调用失败：说明真实错误，进入 `prompt-only`，直接给出紧凑完整提示词。
-- 工具发现完成且确实没有兼容 callable：进入 `invocation-handoff`，直接给出紧凑完整提示词。
-- 已生成但近乎原图、改脸、脏化或目标光影失败：说明“本次图片结果未达到目标改善”，进入 `prompt-handoff`，从原图重组紧凑完整提示词。
-
-读取 Skill、查看图片、生成审计文件或输出“正在调用”都不等于已经调用图片工具。
+读取 Skill、查看图片、创建任务或输出“正在调用”都不算图片工具调用。
 
 ## 禁止本地制作成片
 
-不得使用 Pillow、NumPy、OpenCV、ImageMagick、FFmpeg、`sips` 或自写脚本为交付图片补光、调色、磨皮、锐化、加纹理、裁切、扩边、缩放、合成或修复。它们只可用于只读宽高比检查、蒙版验证和结果审计，不能冒充 image edit。
+不得用 Pillow、NumPy、OpenCV、ImageMagick、FFmpeg、`sips` 或自写脚本生成、补光、调色、磨皮、锐化、加纹理、裁切、扩边、缩放、合成或修复交付图。它们仅可执行只读比例、蒙版和结果审计；依赖见 `requirements.txt`。
 
-依赖记录在根目录 `requirements.txt`。运行只读脚本前，从当前 `SKILL.md` 解析绝对 Skill 根目录；不得假设当前工作目录。
+## 编译图片提示词
 
-## 导演式光影决策
-
-生成提示之前先在内部决定七项，不把分析过程或候选方案全部塞入提示词：
-
-1. `Key`：主光来自哪里，是柔光、硬光、侧光还是逆光；
-2. `Exposure intent`：选择平衡曝光、高光优先、阴影优先、低调、剪影或高调；
-3. `Fill`：决定无补光、环境反射或明确补光；不得默认补亮所有暗部；
-4. `Shadow`：决定阴影硬度、深度、过渡宽度以及是否允许接近黑色；
-5. `Subject`：光如何跨过额头、眼周、鼻梁、面颊、颈肩与衣物；
-6. `Background`：背景亮度、反射和色温如何响应同一光源；
-7. `Atmosphere`：最多选择一种窗影、树影、柔焦光斑、夕阳光晕、轻微体积光或 A6 主体全黑剪影。
-
-选择配方时读取 [光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)。每次只选：
+读取 [配方](references/lighting-skin-color-temperature-recipes.md) 和 [提示词编译器](references/prompt-recipes.md)，内部按 `Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere` 决策。每次只选：
 
 ```text
-一个 L 主光 + 一个 S 皮肤 + 一个 T 色温 + 零个或一个 A 氛围
+一个 L + 一个 S + 一个 T + 零个或一个 A
 ```
 
-不要同时堆叠柔窗光、伦勃朗光、硬光束、霓虹和夕阳。氛围效果必须服从主光，不可只贴在脸上。
+只保留一套主光；Atmosphere 必须服从主光。A6 是唯一覆盖项：选中后强制 `silhouette`、主光在人物后方、无 Fill/眼神光/内部受光；整个人物内部全黑，L/T 只控制背光与背景，S 不显示。
 
-`A6` 是强制覆盖项，不是普通叠加效果。只要配方包含 `A6`，立即把曝光意图设为 `silhouette`，把有效主光置于人物后方，取消正面/侧面 Fill、眼神光和人物内部受光；脸、皮肤、头发、衣物与身体内部统一压成干净全黑，仅由明亮背景或背后光源显出原人物的完整外轮廓与姿态。此时 `A6` 覆盖 L 中关于人物正面受光的描述，S 只保留为配方记录、不要求纹理可见，T 只控制背景与轮廓附近光色。
-
-## 紧凑提示词协议
-
-图片模型的实际提示词不是审计报告。读取 [紧凑提示词编译器](references/prompt-recipes.md)，严格压缩为四行：
+实际发送内容固定为四行：
 
 ```text
-编辑：同一人物与原构图，只重建光影和肤质。
-光影：主光 + 曝光意图 + 补光/阴影策略 + 背景响应 + 可选单一氛围。
-肤质：与面部尺度匹配的干净、低对比真实微纹理。
-限制：4–6 个最高风险禁止项；目标变化必须可辨。
+编辑：身份与结构不变量。
+光影：主光、曝光、暗部、背景、色温及可选氛围。
+肤质：一个尺度相符的 S 目标；A6 改为内部全黑。
+限制：4 个最高风险禁止项。
 ```
 
-执行规则：
+- 默认 100–180 个中文字符；复杂场景最多 260 个；
+- 身份只锁定一次，保护物最多点名三类；
+- 正向可见结果优先，不写审计、编号、置信度或后端说明；
+- 不堆同义负向词，不使用“完全不变、最小变化”压制编辑；
+- 重试时替换失败行，不在旧提示后追加约束。
 
-- 默认 120–220 个中文字符；复杂场景也不得超过 320 个中文字符；
-- 身份与结构只锁定一次，不重复列举同义约束；
-- 不逐项抄写整份场景审计，只点名最多三类最高风险保护对象；
-- 正向目标优先，负向限制只保留换脸、磨皮、颗粒/脏化、背景重绘等核心风险；
-- 不使用“最小变化、完全不变、尽量不改、低强度”反复压制目标；
-- 不把 L/S/T/A 编号写进图片提示正文；
-- 失败重试时替换失败句，不在旧提示后继续追加约束。
+所有 handoff 使用同一四行结构且不得留占位符。
 
-`invocation-handoff`、`prompt-only` 和 `prompt-handoff` 输出的提示词也遵守同一长度与四行结构；必须无占位符，但不展开成长篇清单。
+## 编辑边界
 
-## 身份与可变范围
+- **结构不变量**：身份、脸型/头脸比例、五官位置与大小、自然不对称、表情、视线、发际线、姿势、相机视角、构图与人物占画比例；禁止美型或对称化。
+- **允许变化**：皮肤、头发、衣物和邻近背景的同源亮度、反射、投影、色温及用户指定氛围。
+- **A6 例外**：内部五官按授权不可见；改用头发/头部外轮廓、头身比例、姿态和位置判断结构保持。
 
-保持人物身份、脸型轮廓、头脸比例、五官位置与大小、自然轻微不对称、表情、视线、发际线、姿势、相机视角、构图和原画幅。不要“完美对称化”、瘦脸、大眼、缩鼻、丰唇或重塑身体。
+## 皮肤与光影底线
 
-选择 A6 时，内部五官会按授权消失在黑色剪影中；改用头部与发型外轮廓、肩颈关系、身体比例、姿态和人物占画位置判断结构保持，不得借剪影重塑轮廓或姿势。
+- 按配方选择 S0/S1/S2；正常观看先干净连续，放大后才见低对比、非重复微纹理。黑头、痣、卡粉等默认只保留源图已有内容。
+- Fill 只在曝光意图要求暗部可读时使用；低调、高光优先和剪影可无 Fill。
+- 阴影软硬服从光源面积和距离；人物、衣物与背景共享方向、衰减和反射。
+- 窗/树影需跨主体与邻近表面，Bokeh 仅在离焦区，光束需有介质和方向，霓虹需有主次。
+- A6 暂停肤质可见性：脸、皮肤、头发、衣物及身体内部必须干净全黑，不得残留面光、肤色、眼神光、发丝或衣纹；仅允许不侵入内部的极窄同源轮廓溢光。
 
-这些结构约束不等于原样复制。允许以下外观按目标光源发生明显变化：
+## 画幅
 
-- 面部、耳、颈肩与可见皮肤的连续亮度、柔和阴影和镜面反射；
-- 头发、衣物及邻近背景的同源高光、投影和环境反射；
-- 皮肤的低对比微纹理与原有唇纹、眼周层次；
-- 用户指定的窗影、树影、Bokeh、夕阳侧光、霓虹或光束。
-
-## 干净真实肤质
-
-正常观看时先看到干净、柔和、健康的皮肤；合理放大后才看到微纹理。
-
-选择 A6 时，本节的肤质可见性要求暂停：所有可见皮肤必须与头发、衣物和身体一起落为均匀干净的黑色剪影，不显示肤色、毛孔、唇纹、眼周细节、妆面、眼神光或局部面光；这不算塑料皮或肤质失败。
-
-- 低频：保持原肤色基准与脸、耳、颈、上胸、锁骨的连续性，不漂白、不斑驳；
-- 中频：立体感来自宽缓受光渐变、自然遮挡与环境反射，不靠加深眼袋、法令纹、鼻翼沟、嘴角或颈纹；
-- 高频：毛孔、绒毛、浅细纹和唇纹低对比、低密度、不重复，服从曲率、景深和光向；
-- 黑头、痣、雀斑、卡粉、浮粉默认只保留源图已有内容，不为了“真实”主动制造污点、粉屑或干裂。
-
-面部高度建议：
-
-- `<256 px`：使用 S0，不新增毛孔、黑头、绒毛或细纹；光影仍按用户目标清楚重建；
-- `256–511 px`：使用 S1，只做克制微纹理；
-- `≥512 px`：可用 S2，保留分区微纹理，但禁止超清毛孔和颗粒锐化。
-
-细腻胶片颗粒只在用户明确要求杂志或电影胶片感时作为全画面极轻的统一成像特征；不能只加在皮肤上，也不能代替毛孔。
-
-## 物理光影边界
-
-- `catchlight in eyes`：只在需要时添加一处与主光方向一致的眼神光；已有眼神光时优先保持，禁止双重眼神光。
-- `subtle fill light`：只在曝光意图需要暗部可读时使用；剪影、低调或高光优先曝光可完全不用补光。
-- `ambient occlusion`：只用于极轻的接触阴影和空间贴合，不能充当补光，也不能加深眼下或法令纹。
-- 窗影、树影：必须跨过人物和邻近环境表面连续变化，边缘软硬与光源距离一致。
-- Bokeh：只存在于景深允许的背景或前景离焦区，不覆盖眼睛、皮肤与关键轮廓。
-- 光束/丁达尔：只有方向和介质合理时使用，保持轻微，不用烟雾遮盖人物。
-- 黄金时刻：优先保留夕阳高光、侧逆光和轮廓光；背光面可深暗或成为局部剪影，只有用户要求看清面部时才加低强度环境补光。
-- 低调与硬光：允许大面积深暗、接近黑色的阴影和少量高光溢出，只要边缘、落点和空间关系真实；深暗不等于脏灰。
-- 霓虹：青/洋红两侧光必须有清楚方向和亮度主次；未受光区域可以深暗，不能为了看清全脸而加入无来源白色补光。
-- 皮肤微纹理只要求在有效受光区域自然可见；处于剪影或深暗中的皮肤不必保留同等细节可见度。
-- `A6` 主体全黑剪影：优先级高于 L 的人物受光、Fill、catchlight 与 S 的肤质可见性；人物内部不得残留脸部、肤色、发丝、衣纹或饰品明暗细节，只允许极窄同源轮廓溢光且不能进入人物内部。
-
-## 输出画幅
-
-要求保持输入构图、方向、宽高比和人物占画比例，不要求输出像素尺寸与原图一致。允许图片后端因最大分辨率限制等比例缩小，也允许边长取整造成轻微比例偏差。
-
-有本地结果文件时只运行：
+保持方向、宽高比、构图和人物占画比例；允许后端等比例缩小，不要求原像素尺寸。有本地结果时只读检查：
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/check_aspect_ratio.py" SOURCE_IMAGE EDITED_IMAGE
 ```
 
-默认相对宽高比偏差不超过 5% 即通过。不要比较或强制恢复原始 `W × H`，不要因为输出分辨率较小判失败，也不要用本地脚本放大、缩放、裁切或补边。只有明显拉伸、改变方向、裁切/扩图导致比例超差，或人物占画位置发生明显变化时才进入 `prompt-handoff`。
+相对比例偏差 `≤5%` 通过。不得用本地脚本修正尺寸、裁切或补边。
 
-## 生成后验收
+## 结果验收
 
-按正常观看倍率先检查：
+生成后读取 [身份与细节审计](references/identity-and-detail-audit.md)，按正常观看倍率先检查：
 
-1. 用户指定的主光方向、明暗关系或氛围效果是否直接可辨；
-2. 人物是否仍为同一身份，五官、表情、姿势和构图是否稳定；A6 改查头发/头部外轮廓、头身比例、姿势和构图，不要求黑色内部五官可见；
-3. 主体、衣物和背景是否服从同一组光源与曝光意图；
-4. 皮肤是否干净连续、无塑料感，也无颗粒、色斑、脏灰与假立体；A6 改查人物内部是否完整、连续、干净地落为黑色；
-5. 窗影、树影、Bokeh、霓虹或光束是否具有物理落点，而非后期贴纸；
-6. 深暗、剪影或高光溢出是否由选定光位自然产生，而非被错误判成必须补亮的缺陷；A6 若仍可见面光、肤色、眼神光或衣物内部细节则判失败；
-7. 输出方向、宽高比、构图和人物占画比例是否合理；等比例缩小本身不是失败。
+1. 目标主光、曝光和氛围是否直接可辨且物理一致；
+2. 身份、结构、姿势与构图是否稳定；A6 改查外轮廓、比例与姿态；
+3. 受光皮肤是否干净、真实且无颗粒/脏灰/假立体；A6 改查人物内部是否连续全黑；
+4. 背景与主体是否同源，窗影、树影、Bokeh、霓虹或光束是否有合理落点；
+5. 方向、比例与人物占画是否保持；等比例缩小不算失败。
 
-结果近乎原图时，不再增加一串同义限制；改为加强唯一主光句和一个可观察目标。结果脏化时，删除颗粒、强对比、深邃皱褶等词，并替换为“干净连续肤色 + 低对比反射微纹理”。
+近乎原图时加强唯一主光和一个可观察结果；脏化时把肤质行替换为“干净连续肤色 + 低对比反射微纹理”。失败图不得冒充成片。
 
-## 参考文件
+## 按需读取
 
-- [紧凑提示词编译器](references/prompt-recipes.md)
-- [光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)
-- [后端能力与干净真实感](references/backend-and-clean-realism.md)
-- [身份与细节审计](references/identity-and-detail-audit.md)
-- [局部编辑计划与保护规则](references/edit-plan-and-protection.md)
+- 每次编译提示：`references/prompt-recipes.md`、`references/lighting-skin-color-temperature-recipes.md`
+- 调用、能力分级或失败分流：`references/backend-and-clean-realism.md`
+- 生成后验收：`references/identity-and-detail-audit.md`
+- 仅严格局部后端：`references/edit-plan-and-protection.md`
