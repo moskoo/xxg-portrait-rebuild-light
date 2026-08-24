@@ -44,13 +44,13 @@ Skill は最初に内部でディレクター式の判断を行います。
 Key キーライト → Exposure 露出意図 → Fill フィル → Shadow 影 → Subject 主体 → Background 背景 → Atmosphere 雰囲気
 ```
 
-画像モデルへ渡すプロンプトは 4 行に圧縮します。
+画像モデルへ渡すプロンプトは、英語 40〜90 語の 4 行に圧縮します。
 
 ```text
-編集：再照明し、同一人物、構造、表情、姿勢、カメラ、構図を維持する。
-光：1 つのキー + 露出／暗部戦略 + 背景反応 + 任意の雰囲気。
-肌：顔の表示サイズに合う清潔で低コントラストの微細質感。
-制約：別人化、スムージング、汚れた質感、背景の描き直しをしない。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: One key with explicit direction, exposure consequence, shadow behavior, background response, color temperature, and at most one source-consistent atmosphere.
+SKIN: One clean, low-contrast, scale-aware photographic microtexture target.
+AVOID: The four highest-risk failures for this source image.
 ```
 
 同一性監査、物体一覧、重複するネガティブ語、複数の撮影スタイルを一つのプロンプトに詰め込みません。制約同士が相殺されたり、元画像がそのまま複製されたりするのを防ぐためです。

@@ -1,113 +1,117 @@
-# 光影、皮肤、色温与氛围配方
+# Lighting, Skin, Color, and Atmosphere Recipes
 
-## 选择协议
+## Contents
 
-每次只选 `一个 L + 一个 S + 一个 T + 零个或一个 A`。内部顺序：`Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere`；发送给模型时删除编号和解释。
+[Selection](#selection-protocol) · [Exposure](#exposure-intent) · [Combinations](#quick-combinations) · [Key lights](#key-light-recipes-l) · [Atmosphere](#atmosphere-recipes-a) · [Skin](#skin-recipes-s) · [Color](#color-temperature-recipes-t) · [Controls](#optional-control-clauses)
 
-- 主光需写方向、软硬和落点；曝光先于 Fill；
-- 阴影服从光源面积/距离，人物与背景同源响应；
-- 氛围最多一种，A1–A5 服从主光；
-- A6 是强制覆盖项：固定剪影曝光并暂停人物受光与肤质可见性。
+## Selection Protocol
 
-## 曝光意图
+Choose exactly `one L + one S + one T + zero or one A`. Decide internally as `Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere`, then send only the model-facing behavior without codes or explanations.
 
-| 意图 | 场景与策略 |
+- Define key direction, apparent source size, and landing area. Set exposure before fill.
+- Derive shadow edge and depth from source size and distance. Apply the same light direction, falloff, and reflected color to subject and environment.
+- Use at most one atmosphere. A1–A5 must inherit the selected key.
+- A6 overrides ordinary exposure and suspends visible subject lighting and skin texture.
+
+## Exposure Intent
+
+| Intent | Use and behavior |
 | --- | --- |
-| `source-matched` | 保持原曝光，只修不连续和无来源异常 |
-| `balanced` | 商业/窗光；明暗都有层次但不等亮 |
-| `highlight-priority` | 夕阳/逆光；保亮源与轮廓，背光面可深暗 |
-| `shadow-priority` | 暗室中需看清主体；保暗部，允许亮源溢出 |
-| `low-key` | 暗调/霓虹；大面积近黑，只留必要受光 |
-| `silhouette` | 强逆光；无 Fill，内部细节消失，保轮廓姿态 |
-| `high-key` | 电商/极简；高亮柔层次，不灰平 |
+| `source-matched` | Preserve source exposure; repair only discontinuities and illumination with no plausible source. |
+| `balanced` | Commercial or window-light work; retain separation in highlights and shadows without making them equally bright. |
+| `highlight-priority` | Sunset or strong backlight; retain the bright source and rim while allowing the camera-facing side to become deeply shadowed. |
+| `shadow-priority` | Subject readability in a dark room; retain shadow information and allow practical lights to bloom. |
+| `low-key` | Dramatic or neon work; keep most of the frame near black and expose only selected planes. |
+| `silhouette` | Strong backlight; use no fill, remove internal subject detail, and preserve only outline and pose. |
+| `high-key` | E-commerce or minimal work; use bright, soft separation without flat gray shadows. |
 
-`clean shadow` 指无脏灰、噪点和无来源加深，不等于浅阴影。
+`Clean shadow` means free of mottled gray, noise, and source-less darkening; it does not mean shallow shadow.
 
-## 快速组合
+## Quick Combinations
 
-| 用户目标 | 配方 |
+| Requested result | Combination |
 | --- | --- |
-| 保持原环境、修平光 | `L0 + Sx + T0 + A0` |
-| 自然逆光 | `L1 + Sx + T1 + A0` |
-| 柔和窗光 | `L2 + Sx + T1 + A0/A1` |
-| 商业影棚柔光 | `L3 + Sx + T1 + A0` |
-| 暗调斜光 | `L7 + Sx + T0/T2 + A0/A5` |
-| 时尚杂志 | `L8 + Sx + T1 + A0` |
-| 电影低调冷暖 | `L9 + Sx + T3 + A0/A5` |
-| 黄金时刻 | `L10 + Sx + T2 + A4` |
-| 全黑人物剪影 | `Lx + Sx + Tx + A6` |
-| 赛博朋克 | `L11 + Sx + T4 + A3` |
-| 商业极简 | `L12 + Sx + T1 + A0` |
+| Preserve environment; repair flat light | `L0 + Sx + T0 + A0` |
+| Natural backlight | `L1 + Sx + T1 + A0` |
+| Soft window light | `L2 + Sx + T1 + A0/A1` |
+| Commercial studio softness | `L3 + Sx + T1 + A0` |
+| Low-key diagonal beam | `L7 + Sx + T0/T2 + A0/A5` |
+| Fashion editorial | `L8 + Sx + T1 + A0` |
+| Cinematic warm/cool low-key | `L9 + Sx + T3 + A0/A5` |
+| Golden hour | `L10 + Sx + T2 + A4` |
+| Full-black subject silhouette | `Lx + Sx + Tx + A6` |
+| Cyberpunk neon | `L11 + Sx + T4 + A3` |
+| Clean commercial high-key | `L12 + Sx + T1 + A0` |
 
-## 主光 L
+## Key-Light Recipes L
 
-| 编号 | 模型提示句 |
+| Code | Model-facing behavior |
 | --- | --- |
-| L0 匹配原片 | 保持原主光与曝光，只修平光、不连续和无来源亮暗；不改变合理深暗/亮源 |
-| L1 自然逆光 | 保留后侧亮源、发丝轮廓和背景，高光优先；背光面可深暗，明确要求补面时才加低幅环境反射 |
-| L2 柔和窗光 | 指定侧前上大面积柔窗光形成宽缓渐变；必要时微弱 Fill，人物、衣物、墙面同向衰减 |
-| L3 商业柔光 | 侧前上大型柔光 + 低幅正面 Fill；鼻影短柔、眼窝清楚、面颊/下颌自然，背景低幅响应 |
-| L4 天空柔光 | 宽广天空光与现场反射照亮人物，保留低幅曲率与环境色；无棚拍热点/强发丝描边 |
-| L5 实景混合光 | 可见暖灯只照合理邻近区，远处自然变暗；中性环境光存在时才留低幅 Fill，人物与房间对应 |
-| L6 单点硬光 | 指定方向小面积硬光形成清楚曲率阴影；受光可控溢出，背光可近黑，鼻/颈/衣物/背景投影同向 |
-| L7 斜向光带 | 低调曝光，略柔窄光带穿过眼鼻颊并沿曲率连续；带外近黑，仅留轮廓，背景同向响应 |
-| L8 伦勃朗光 | 侧前上大型柔光，细微 Fill 留眼窝；一侧面颊深柔，仅一处同源眼神光 |
-| L9 电影低调 | 暖色侧主光塑造明暗，低调且无正面 Fill；背光侧近黑，冷色仅在背景与轮廓 |
-| L10 黄金时刻 | 暖夕阳侧后勾勒发丝肩部，按高光曝光且无正面 Fill；背光面深暗，背景同向暖光与长影 |
-| L11 双色霓虹 | 青色轮廓与洋红侧主光方向/主次清楚，低调无白色 Fill；未受光区深暗，不满脸染色 |
-| L12 极简柔光 | 顶前大型柔光均匀漫反射，轻微正面 Fill；高光干净、阴影柔和 |
+| L0 Source match | Preserve the source key and exposure; correct only flatness, discontinuous falloff, and light or shadow with no plausible source. Retain intentional darkness and practical highlights. |
+| L1 Natural backlight | Keep the rear source, bright background, and hair rim. Expose for highlights; allow the camera-facing side to deepen naturally, adding only low-level environmental reflection when facial fill is explicitly requested. |
+| L2 Soft window key | Place a large soft window source above and to one side for a broad directional gradient. Use weak fill only if needed; carry the same direction and falloff across subject, clothing, wall, and furniture. |
+| L3 Commercial soft key | Place a large soft source above and camera-side with low-level frontal fill. Produce a short soft nose shadow, readable eye socket, natural cheek/jaw modeling, and restrained background response. |
+| L4 Open-sky light | Use broad skylight plus location bounce to illuminate the subject with low-amplitude curvature and ambient color. Avoid studio hotspots and artificial hair rims. |
+| L5 Practical mixed light | Let each visible warm practical affect only plausible nearby surfaces and decay with distance. Retain neutral ambient fill only when the room supports it; make subject and room responses agree. |
+| L6 Hard point source | Place one small directional source for crisp curvature-aware shadows. Permit controlled highlight clipping and near-black unlit planes; align nose, neck, clothing, and background cast shadows. |
+| L7 Diagonal light beam | Use low-key exposure and one slightly softened narrow beam crossing the eye, nose, and cheek along facial curvature. Keep areas outside the beam near black with a clean outline and a source-aligned background response. |
+| L8 Rembrandt editorial | Place a large soft key above and to one side, with minimal fill preserving the eye socket. Keep the far cheek deep but smooth and create exactly one source-consistent catchlight. |
+| L9 Cinematic low-key | Use one warm side key for selective facial modeling, low-key exposure, and no frontal fill. Let the far side approach black; confine cool light to background and rim. |
+| L10 Golden-hour side backlight | Place warm sunset light behind and to one side, outlining hair and shoulders. Expose for the bright rim with no frontal fill; allow deep camera-facing shadows and align background warmth and long shadows with the source. |
+| L11 Dual-tone neon | Use one magenta side key and a weaker cyan rim from a distinct opposite-rear direction. Keep low-key exposure with no white fill; preserve deep unlit planes and avoid a uniform color wash. |
+| L12 Minimal high-key soft light | Use a large top-front diffused source with slight frontal fill for clean diffuse highlights, soft directional shadows, and bright but nonflat separation. |
 
-## 氛围 A
+## Atmosphere Recipes A
 
-| 编号 | 模型提示句 |
+| Code | Model-facing behavior |
 | --- | --- |
-| A0 无 | 不新增氛围效果 |
-| A1 窗影 | 一层低对比柔窗影跨人物与邻墙，透视、方向、边缘服从主光，不像贴纸 |
-| A2 树影 | 稀疏树影随脸/衣物曲率断续，可按真实落点跨眼颊；背景同向，阴影干净 |
-| A3 Bokeh | 少量光斑仅在景深允许的离焦背景，颜色来自现场光，不覆盖人物 |
-| A4 夕阳光晕 | 沿夕阳方向一处轻柔光晕；亮源附近可降对比/轻溢出，不覆盖全画面 |
-| A5 体积光 | 仅在光向明确时加入极轻体积光和稀疏微尘，集中空气/背景，不遮人物 |
-| A6 全黑剪影 | 人物位于背后亮源/亮背景前，无 Fill/眼神光/内部受光；脸、皮肤、头发、衣物和身体内部连续全黑，仅原外轮廓、比例、姿态可辨 |
+| A0 None | Add no new atmosphere effect. |
+| A1 Window shadow | Add one low-contrast soft window shadow across the subject and an adjacent wall; perspective, direction, penumbra, and falloff must follow the key rather than appear pasted on. |
+| A2 Tree shadow | Add sparse, irregular foliage shadows that break naturally across facial and clothing curvature and continue onto nearby background surfaces with the same direction. |
+| A3 Bokeh | Add only a few light circles in optically defocused background regions. Derive their color from visible scene lighting and never place them over the subject. |
+| A4 Sunset flare | Add one restrained flare aligned with the sunset source. Permit slight contrast loss or bloom only near that source, never across the entire frame. |
+| A5 Volumetric light | Add extremely faint source-aligned haze and sparse dust only where a visible or strongly inferred beam crosses air or background; do not veil the subject. |
+| A6 Full-black silhouette | Place the subject against a bright source or luminous background with no fill, catchlight, or internal illumination. Render face, skin, hair, clothing, accessories, and body interior as one continuous black mass while retaining the original outline, proportions, and pose. |
 
-### A6 覆盖
+### A6 Override
 
-- 强制 `exposure_intent: silhouette`、`fill_policy: none`、`shadow_policy: silhouette`；
-- L 只保留背后光源与背景风格；删除人物正/侧面受光；
-- S 不进入模型提示，T 只控制背景/亮源；
-- 内部若出现五官、肤色、眼神光、发丝高光、衣纹或饰品明暗即失败；极窄轮廓溢光不得侵入内部。
+- Force `exposure_intent: silhouette`, `fill_policy: none`, and `shadow_policy: silhouette`.
+- Retain from L only the rear source and background treatment; remove frontal and side illumination from the subject.
+- Omit S from the model prompt. Apply T only to the source and background.
+- Fail if facial features, skin color, catchlights, lit hair strands, garment texture, accessory shading, or gray fill remains inside. Permit only a very narrow source-consistent rim that does not enter the silhouette.
 
-## 皮肤 S
+## Skin Recipes S
 
-| 编号 | 适用与模型提示句 |
+| Code | Scale and model-facing behavior |
 | --- | --- |
-| S0 `<256 px` | 干净连续肤色与自然反射；不新增毛孔、黑头、绒毛、痣或细纹 |
-| S1 `256–511 px` | 白皙健康、低对比不规则微纹理；保留原唇纹、眼周层次和克制额头反光，不新增污点 |
-| S2 `≥512 px` | 干净相机微纹理；脸颊孔理柔和、鼻头略清晰，保留原浅纹、细绒毛和标志；脸颈胸肤色连续 |
+| S0 `<256 px` | Render clean continuous skin tone and source-consistent reflection; do not invent pores, blackheads, vellus hair, moles, or fine lines. |
+| S1 `256–511 px` | Keep fair, healthy skin with low-contrast irregular microtexture. Retain source lip texture, eye-area transitions, and restrained forehead sheen; invent no blemishes. |
+| S2 `≥512 px` | Render clean camera-resolved microtexture: softer cheek pores, slightly crisper nose pores, original shallow lines, vellus hair, and identifying marks. Keep face, neck, and upper-chest chroma continuous. |
 
-所有 S 只作用于有效受光区；深暗不强提细节。黑头、卡粉、浮粉、粉屑、干裂和醒目痣默认只保留源图已有内容。A6 暂停全部 S 可见性。
+Apply S only to genuinely illuminated skin. Do not lift deep shadows to reveal texture. Preserve blackheads, powder separation, flaking, dryness, freckles, and conspicuous moles only when they exist in the source. A6 suppresses all visible S behavior.
 
-## 色温 T
+## Color-Temperature Recipes T
 
-| 编号 | 模型提示句 |
+| Code | Model-facing behavior |
 | --- | --- |
-| T0 源白平衡 | 保持原白平衡和肤色中性点，只修局部不连续色偏 |
-| T1 中性日光 | 中性自然日光；健康肤色和白色物体不过蓝/黄 |
-| T2 黄金暖光 | 暖色集中在受光面与邻近反射；保留健康中性肤色，不做全图橙滤镜 |
-| T3 暖主冷背景 | 暖主光照主体，冷色仅在背景/轮廓，过渡连续且肤色无断层 |
-| T4 青洋红 | 青/洋红各有方向和主次；受光皮肤反射自然，未受光区可深暗，饱和度受控 |
+| T0 Source white balance | Preserve the source white balance and skin neutral point; correct only localized discontinuous color casts. |
+| T1 Neutral daylight | Use neutral natural daylight; keep healthy skin and nominally white objects from drifting blue or yellow. |
+| T2 Golden warm light | Concentrate warmth on directly lit planes and nearby bounce. Retain healthy neutral transitions in skin; do not apply a global orange filter. |
+| T3 Warm key, cool background | Put warm color in the subject key and cool color only in background or rim. Keep transitions continuous and avoid a face-to-neck color break. |
+| T4 Cyan/magenta relationship | Give cyan and magenta distinct directions, roles, and intensities. Preserve plausible skin reflection on lit planes, deep shadows elsewhere, and controlled saturation. |
 
-## 可选控制词
+## Optional Control Clauses
 
-| 目标 | 仅在需要时加入 |
+| Need | Add only this clause |
 | --- | --- |
-| 单一眼神光 | `single source-consistent catchlight` |
-| 恢复暗部 | `subtle fill light, retained shadow detail`，仅 balanced/source-matched |
-| 柔光 | `large diffused key, broad shadow transition` |
-| 硬光 | `hard single-point key, clean shadow edge` |
-| 接触深度 | `very subtle ambient occlusion at contact areas`，不能当 Fill |
-| 胶片 | `very fine uniform film grain across the frame`，仅用户明确要求 |
-| 干净阴影 | `clean shadow, no muddy gray patches` |
-| 高光优先 | `expose for highlights, naturally deep backlit shadows` |
-| 阴影优先 | `expose for subject shadows, allow practical highlights to bloom` |
-| 低调 | `low-key exposure, deep clean shadows, sparse highlights` |
-| 剪影 | `no frontal fill, readable outer silhouette, interior falls to black` |
+| One catchlight | `one source-consistent catchlight` |
+| Recover shadow detail | `subtle environmental fill retaining shadow separation` — only for `balanced` or `source-matched` |
+| Soft light | `large diffused key with a broad shadow transition` |
+| Hard light | `small hard key with a clean cast-shadow edge` |
+| Contact depth | `very subtle ambient occlusion at contact points` — never use as fill |
+| Film grain | `very fine uniform film grain across the full frame` — only when explicitly requested |
+| Clean shadow | `clean shadow without muddy gray patches` |
+| Highlight priority | `expose for highlights; allow naturally deep backlit shadows` |
+| Shadow priority | `expose for subject shadows; allow practical highlights to bloom` |
+| Low-key | `low-key exposure with deep clean shadows and sparse highlights` |
+| Silhouette | `no frontal fill; preserve the outer silhouette while the interior falls to black` |

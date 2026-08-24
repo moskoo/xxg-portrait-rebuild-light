@@ -1,117 +1,123 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Relight an existing JPG, JPEG, PNG, or WebP portrait and restore clean photographic skin texture while preserving identity, natural asymmetry, proportions, expression, pose, composition, and framing. Use for 真实肤质、去塑料感、光影重建、人物补光、逆光修复、窗光/窗影、树影、Bokeh、黄金时刻、霓虹、影棚柔光、暗调写真、主体全黑剪影, relight, silhouette, or Higgsfield-Relight-like edits. Discover the host image-edit tool first; in Codex use discovered image_gen__imagegen with referenced_image_paths. Never guess image_gen/input_image, make the final with local pixel scripts, or refuse for small faces or complex scenes."
+description: "Relight an existing JPG, JPEG, PNG, or WebP portrait and rebuild clean photographic skin response without changing the person. Use for realistic skin recovery, plastic-skin removal, natural fill, backlight correction, soft window light or shadows, tree shadows, bokeh, golden-hour side backlight, neon, studio soft light, low-key light beams, full-black silhouettes, or Higgsfield-Relight-like image edits."
 ---
 
-# XXG 人像真实光影重建
+# XXG Portrait Rebuild Light
 
-## 目标
+## Objective
 
-把输入视为同一张摄影原片，只重建光影与皮肤呈现：
+Treat the input as the same photograph, not as a reference for a replacement image. Change illumination and material response while:
 
-- 保持身份、自然不对称、面部结构与比例、表情、姿势、镜头和构图；
-- 用一个物理明确的主光统一人物、衣物与背景，允许符合曝光意图的深暗、溢出和剪影；
-- 让受光皮肤干净健康、低对比且有尺度相符的相机微纹理，不用颗粒、色差或加深皱褶制造真实感。
+- retaining identity, natural facial asymmetry, facial geometry, expression, pose, camera view, framing, and subject scale;
+- using one physically coherent key light to drive the subject, clothing, nearby surfaces, and background;
+- rendering illuminated skin as clean and healthy, with low-contrast camera-resolved microtexture appropriate to the visible face scale.
 
-目标变化必须在正常观看下可辨。不要为了“全部清楚”把逆光、低调或硬光补成平均曝光。
+The requested change must be visible at normal viewing size. Do not flatten backlight, low-key light, hard light, or silhouette exposure merely to keep every detail readable.
 
-## 调用宿主图片能力
+## Use the Host Image Editor
 
-1. 查看源图并读取宿主原生图片生成/编辑 Skill。
-2. 从工具注册表发现真实 callable；Codex 从 `ALL_TOOLS` 查找，并优先选择准确名称 `image_gen__imagegen`。
-3. Codex 编辑本地源图只使用已发现工具及真实参数：
+1. Inspect the source image and read the host's native image-generation or image-editing skill.
+2. Discover the actual callable in the tool registry. In Codex, inspect `ALL_TOOLS` and prefer the exact discovered name `image_gen__imagegen`.
+3. For a local source image in Codex, use only the discovered tool and its real arguments:
 
 ```js
 const result = await tools.image_gen__imagegen({
   referenced_image_paths: ["/absolute/path/source.png"],
-  prompt: "四行紧凑 image edit 提示词"
+  prompt: "compact four-line English image-edit prompt"
 });
 generatedImage(result);
 ```
 
-禁止猜测 `tools.image_gen` 或 `input_image`。错误函数名、参数或 `TypeError` 是调度错误，应按真实签名重试，不能据此判定工具不可用。Claude、OpenClaw 等使用其注册表明确暴露的等价原生 image-edit 动作。
+Never guess `tools.image_gen` or `input_image`. A wrong member name, argument, or `TypeError` is a dispatch error: correct the call from the registered signature instead of declaring the image tool unavailable. In Claude, OpenClaw, or another host, use the equivalent native image-edit action explicitly exposed by that host.
 
-## 状态分流
+## Route the Outcome
 
-| 状态 | 动作 |
+| Observed state | Required action |
 | --- | --- |
-| 发现兼容工具 | 必须调用；小脸、复杂背景、文字或主体触边只降低纹理目标，不停止生成 |
-| 正确工具真实调用失败 | 说明真实错误，进入 `prompt-only`，输出完整短提示词 |
-| 完成发现且无兼容工具 | 进入 `invocation-handoff`，输出完整短提示词 |
-| 已生成但近乎原图、改脸、脏化或光影失败 | 告知“本次图片结果未达到目标改善”，进入 `prompt-handoff`，从原图重编提示词 |
+| Compatible image tool discovered | Invoke it. A small face, dense text, complex props, or a subject touching frame edges lowers detail ambition but never blocks generation. |
+| Correct image tool returns a real error | Report the actual error, enter `prompt-only`, and return a complete compact prompt. |
+| Discovery completes with no compatible callable | Enter `invocation-handoff` and return a complete compact prompt. |
+| Generated result is nearly unchanged, changes identity, dirties skin, or misses the lighting design | State that the result did not achieve the requested improvement, enter `prompt-handoff`, and recompile from the source image. |
 
-读取 Skill、查看图片、创建任务或输出“正在调用”都不算图片工具调用。
+Reading a skill, inspecting an image, creating a task, or saying that generation is starting does not count as an image-tool invocation.
 
-## 禁止本地制作成片
+## Never Produce the Final Image Locally
 
-不得用 Pillow、NumPy、OpenCV、ImageMagick、FFmpeg、`sips` 或自写脚本生成、补光、调色、磨皮、锐化、加纹理、裁切、扩边、缩放、合成或修复交付图。它们仅可执行只读比例、蒙版和结果审计；依赖见 `requirements.txt`。
+Do not use Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, or custom raster scripts to relight, grade, retouch, sharpen, add texture, resize, crop, extend, composite, repair, or otherwise produce the delivered image. Use them only for read-only aspect-ratio, mask, and result audits. See `requirements.txt`.
 
-## 编译图片提示词
+## Compile the Image Prompt
 
-读取 [配方](references/lighting-skin-color-temperature-recipes.md) 和 [提示词编译器](references/prompt-recipes.md)，内部按 `Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere` 决策。每次只选：
-
-```text
-一个 L + 一个 S + 一个 T + 零个或一个 A
-```
-
-只保留一套主光；Atmosphere 必须服从主光。A6 是唯一覆盖项：选中后强制 `silhouette`、主光在人物后方、无 Fill/眼神光/内部受光；整个人物内部全黑，L/T 只控制背光与背景，S 不显示。
-
-实际发送内容固定为四行：
+Read [the prompt compiler](references/prompt-recipes.md) and [the lighting recipes](references/lighting-skin-color-temperature-recipes.md). Decide internally in this order:
 
 ```text
-编辑：身份与结构不变量。
-光影：主光、曝光、暗部、背景、色温及可选氛围。
-肤质：一个尺度相符的 S 目标；A6 改为内部全黑。
-限制：4 个最高风险禁止项。
+Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere
 ```
 
-- 默认 100–180 个中文字符；复杂场景最多 260 个；
-- 身份只锁定一次，保护物最多点名三类；
-- 正向可见结果优先，不写审计、编号、置信度或后端说明；
-- 不堆同义负向词，不使用“完全不变、最小变化”压制编辑；
-- 重试时替换失败行，不在旧提示后追加约束。
+Select exactly:
 
-所有 handoff 使用同一四行结构且不得留占位符。
+```text
+one L + one S + one T + zero or one A
+```
 
-## 编辑边界
+Use one key-light system. Any atmosphere must inherit that key's direction, color logic, and exposure. `A6` is the sole override: force silhouette exposure, place the effective source behind the subject, remove fill/catchlights/internal illumination, render the entire subject interior black, use L/T only for the backlight and background, and suppress S.
 
-- **结构不变量**：身份、脸型/头脸比例、五官位置与大小、自然不对称、表情、视线、发际线、姿势、相机视角、构图与人物占画比例；禁止美型或对称化。
-- **允许变化**：皮肤、头发、衣物和邻近背景的同源亮度、反射、投影、色温及用户指定氛围。
-- **A6 例外**：内部五官按授权不可见；改用头发/头部外轮廓、头身比例、姿态和位置判断结构保持。
+Send only four lines to the image model:
 
-## 皮肤与光影底线
+```text
+EDIT: identity and structural invariants.
+LIGHT: key, exposure, shadow behavior, background response, color temperature, and optional atmosphere.
+SKIN: one scale-appropriate S target; replace with black interior for A6.
+AVOID: the four highest-risk failure modes for this image.
+```
 
-- 按配方选择 S0/S1/S2；正常观看先干净连续，放大后才见低对比、非重复微纹理。黑头、痣、卡粉等默认只保留源图已有内容。
-- Fill 只在曝光意图要求暗部可读时使用；低调、高光优先和剪影可无 Fill。
-- 阴影软硬服从光源面积和距离；人物、衣物与背景共享方向、衰减和反射。
-- 窗/树影需跨主体与邻近表面，Bokeh 仅在离焦区，光束需有介质和方向，霓虹需有主次。
-- A6 暂停肤质可见性：脸、皮肤、头发、衣物及身体内部必须干净全黑，不得残留面光、肤色、眼神光、发丝或衣纹；仅允许不侵入内部的极窄同源轮廓溢光。
+- Target `40–90` English words; allow up to `120` for dense text or product scenes.
+- State the identity lock once and name no more than three protected object categories.
+- Describe visible photographic outcomes; omit recipe codes, audits, confidence, backend notes, and reasoning.
+- Do not stack synonyms or use “change nothing,” “minimal pixel change,” or equivalent language that suppresses the edit.
+- On retry, replace the failed line instead of appending more constraints.
 
-## 画幅
+Every handoff must use the same four-line structure with no placeholders.
 
-保持方向、宽高比、构图和人物占画比例；允许后端等比例缩小，不要求原像素尺寸。有本地结果时只读检查：
+## Edit Envelope
+
+- **Structural invariants:** identity; face/head shape and ratio; feature position and size; natural asymmetry; expression; gaze; hairline; pose; camera perspective; composition; and subject-to-frame scale. Never beautify, idealize, or symmetrize.
+- **Authorized appearance changes:** source-consistent luminance, reflection, cast shadow, color temperature, and requested atmosphere across skin, hair, clothing, and nearby background surfaces.
+- **A6 exception:** internal facial detail is intentionally hidden. Judge preservation from the hair/head/body outline, head-to-body ratio, pose, position, and framing.
+
+## Photographic Priors
+
+- Choose S0/S1/S2 by visible face height. Skin must read clean and continuous at normal size; low-contrast, nonrepeating microtexture should appear only on closer inspection. Preserve blackheads, moles, powder separation, and similar details only when they already exist in the source.
+- Add fill only when the exposure intent requires readable shadows. Low-key, highlight-priority, and silhouette treatments may use no fill.
+- Derive shadow hardness from apparent source size and distance. Subject, clothing, nearby surfaces, and background must share direction, falloff, and reflected color.
+- Window or tree shadows must cross subject curvature and nearby surfaces; bokeh belongs only in optically defocused regions; light rays require a directional source and visible medium; neon needs a clear primary and secondary color source.
+- Under A6, suspend visible skin goals. Face, skin, hair, clothing, accessories, and body interior must form one clean black mass with no facial light, skin color, catchlight, hair strands, or garment texture. Permit only a very narrow source-consistent rim that does not enter the silhouette.
+
+## Preserve the Frame
+
+Retain orientation, aspect ratio, composition, and subject-to-frame scale. A backend may downscale uniformly; exact pixel dimensions are not required. If a local result file exists, perform this read-only check:
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/check_aspect_ratio.py" SOURCE_IMAGE EDITED_IMAGE
 ```
 
-相对比例偏差 `≤5%` 通过。不得用本地脚本修正尺寸、裁切或补边。
+Accept relative aspect-ratio drift of `≤5%`. Never resize, crop, pad, or extend locally to force a pass.
 
-## 结果验收
+## Validate the Result
 
-生成后读取 [身份与细节审计](references/identity-and-detail-audit.md)，按正常观看倍率先检查：
+After generation, read [the identity and detail audit](references/identity-and-detail-audit.md). At normal viewing size, verify:
 
-1. 目标主光、曝光和氛围是否直接可辨且物理一致；
-2. 身份、结构、姿势与构图是否稳定；A6 改查外轮廓、比例与姿态；
-3. 受光皮肤是否干净、真实且无颗粒/脏灰/假立体；A6 改查人物内部是否连续全黑；
-4. 背景与主体是否同源，窗影、树影、Bokeh、霓虹或光束是否有合理落点；
-5. 方向、比例与人物占画是否保持；等比例缩小不算失败。
+1. the requested key, exposure, and atmosphere are immediately legible and physically coherent;
+2. identity, geometry, pose, and composition remain stable; for A6, inspect outline, proportions, and pose;
+3. illuminated skin is clean and photographic, without added grain, mottling, or fake sculpting; for A6, inspect the continuous black interior;
+4. subject and background share the same light logic, with plausible placement for window/tree shadows, bokeh, neon, flare, or light rays;
+5. orientation, aspect ratio, and subject scale remain stable; uniform downscaling is acceptable.
 
-近乎原图时加强唯一主光和一个可观察结果；脏化时把肤质行替换为“干净连续肤色 + 低对比反射微纹理”。失败图不得冒充成片。
+If the result is nearly unchanged, strengthen the single key and one observable outcome. If skin becomes dirty, replace the SKIN line with `clean continuous skin tone with low-contrast reflective microtexture`. Never present a failed image as the final result.
 
-## 按需读取
+## Load References Only When Needed
 
-- 每次编译提示：`references/prompt-recipes.md`、`references/lighting-skin-color-temperature-recipes.md`
-- 调用、能力分级或失败分流：`references/backend-and-clean-realism.md`
-- 生成后验收：`references/identity-and-detail-audit.md`
-- 仅严格局部后端：`references/edit-plan-and-protection.md`
+- For every prompt: `references/prompt-recipes.md` and `references/lighting-skin-color-temperature-recipes.md`
+- For tool routing, backend classification, or failure handling: `references/backend-and-clean-realism.md`
+- After generation: `references/identity-and-detail-audit.md`
+- Only for a verified strict local-edit backend: `references/edit-plan-and-protection.md`

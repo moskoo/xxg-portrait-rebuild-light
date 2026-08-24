@@ -1,82 +1,82 @@
-# 后端能力与干净真实感
+# Backend Capability and Clean Realism
 
-## 交付模式
+## Delivery Modes
 
-| 模式 | 进入条件与交付 |
+| Mode | Entry condition and delivery |
 | --- | --- |
-| `strict-final` | 已验证 `strict-local`、编辑计划和全部验收；可声明严格成品 |
-| `best-effort` | 缺少冻结/蒙版能力仍调用整图语义编辑；标记“非严格尽力编辑”，不声称像素冻结 |
-| `invocation-handoff` | 工具发现完成且无兼容 callable；输出完整短提示，不声称调用失败 |
-| `prompt-only` | 正确图片工具有真实失败记录；引用错误摘要并输出完整短提示 |
-| `prompt-handoff` | 已生成但目标、身份、保护项或比例/构图失败；告知未达标并从原图重编提示 |
+| `strict-final` | Verified `strict-local` backend, valid edit plan, and every applicable gate passes; may be presented as a strict final. |
+| `best-effort` | Native full-frame semantic edit without verified mask or pixel passthrough; label as non-strict best effort and never claim frozen pixels. |
+| `invocation-handoff` | Tool discovery completed and no compatible callable exists; return a complete compact prompt without claiming that invocation failed. |
+| `prompt-only` | The correct image tool produced a real error; summarize that error and return a complete compact prompt. |
+| `prompt-handoff` | A generated image misses the target, changes identity/protected content, or breaks framing; report failure and recompile from the source. |
 
-面部小、场景复杂、文字或能力不足只触发 `best-effort`，不得拒绝。等比例缩小不是失败。
+A small face, complex scene, visible text, edge contact, or weak backend capability can only trigger `best-effort`; none permits refusal. Uniform downscaling is acceptable.
 
-## 原生工具路由
+## Native Tool Routing
 
-1. 读取宿主原生图片 Skill，查看源图并搜索工具注册表；Codex 从 `ALL_TOOLS` 优先选 `image_gen__imagegen`。
-2. Codex 本地源图使用 `tools.image_gen__imagegen({referenced_image_paths: [绝对路径], prompt})`。
-3. 错误成员、函数名、参数或 `TypeError` 只算调度错误；按真实签名重试。
-4. 返回后按能力分为 `strict-local` 或 `full-frame-generative`；默认不绕过宿主走 CLI/API。
+1. Read the host's native image skill, inspect the source, and search the registered tools. In Codex, inspect `ALL_TOOLS` and prefer `image_gen__imagegen` when actually present.
+2. For a local source in Codex, call `tools.image_gen__imagegen({referenced_image_paths: [absolute_path], prompt})`.
+3. Treat a wrong member, function name, argument, or `TypeError` as a dispatch error. Correct it from the registered signature and retry.
+4. After a real result, classify the backend as `strict-local` or `full-frame-generative`. Do not bypass the host with a CLI or separate API by default.
 
-禁止猜测 `tools.image_gen`/`input_image`。读取 Skill、查看源图、创建任务或输出状态都不是工具调用。
+Never guess `tools.image_gen` or `input_image`. Reading a skill, inspecting an image, creating a task, or announcing generation is not a tool invocation.
 
-## 调用证据
+## Invocation Evidence
 
-| 状态 | 必需证据 | 模式 |
+| State | Required evidence | Mode |
 | --- | --- | --- |
-| 已生成 | 图片工具调用 + 图片/结果 ID/可访问文件 | 验收后 `strict-final` 或 `best-effort` |
-| 调用失败 | 正确工具调用 + 同次明确错误 | `prompt-only` |
-| 无工具 | `tool_discovery_completed: true`、候选记录、`selected_image_tool_name: null` | `invocation-handoff` |
-| 调度错误 | 错函数/参数产生本地错误 | 纠正重试，不得交接 |
-| 结果失败 | 图片存在 + 视觉/文件验收失败 | `prompt-handoff` |
+| Image generated | Image-tool call plus image/result ID or accessible output file | `strict-final` or `best-effort` after validation |
+| Invocation failed | Correct tool call plus explicit error from the same attempt | `prompt-only` |
+| No image tool | `tool_discovery_completed: true`, recorded candidates, and `selected_image_tool_name: null` | `invocation-handoff` |
+| Dispatch error | Wrong function or argument caused a local error | Correct and retry; no handoff yet |
+| Result failed | Image exists and visual/file validation fails | `prompt-handoff` |
 
-## 后端分级
+## Backend Classification
 
-匹配 [backend-capabilities.json](backend-capabilities.json)；未知路径归为 `full-frame-generative`。使用登记档案时运行 `scripts/evaluate_backend_gate.py`。
+Match [backend-capabilities.json](backend-capabilities.json); classify an unknown path as `full-frame-generative`. When a registered profile exists, run `scripts/evaluate_backend_gate.py`.
 
-`strict-local` 必须同时具备：任务前已暴露的语义图片编辑、编辑/保护蒙版、未编辑像素直通、可验证固定画布，以及本地结果文件。提示中的“冻结”不是工具能力；任一能力缺失就降级生成，不停止。
+`strict-local` requires all of these capabilities to be exposed before execution: semantic image editing, editable and protected masks, exact passthrough of unedited pixels, a verifiable fixed canvas, and a local result file. A prompt saying `freeze` does not create a backend capability. If any item is missing, continue with best-effort generation.
 
-Pillow、NumPy、OpenCV、ImageMagick、FFmpeg、`sips` 和临时滤镜不算语义后端，只能只读量测/审计，不能制作交付图。
+Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are not semantic backends. Use them only for read-only measurement and validation, never to produce the delivered image.
 
-## 生成决策
+## Generation Policy
 
-| 场景 | 策略 |
+| Condition | Policy |
 | --- | --- |
-| 已验证 `strict-local` | 按已验证编辑计划局部编辑，全部门通过才交付严格成品 |
-| `full-frame-generative` | 整图生成并标记尽力；降低重绘/纹理，保留目标光影 |
-| 脸 `<256 px` | 关闭新增微纹理，不降低场景级光影 |
-| 文字/商品/复杂物体/多人/触边 | 点名最高风险保护物，降低背景重绘；同源亮度/反射仍可变化 |
-| A6 | 不因脸小降强度；授权完整人物内部变黑，冻结外轮廓、比例、姿态、构图和背景 |
+| Verified `strict-local` | Execute the validated local edit plan; deliver a strict final only after every gate passes. |
+| `full-frame-generative` | Generate the full frame as best effort; reduce redraw and texture ambition while preserving the requested lighting change. |
+| Face `<256 px` | Disable invented microtexture; retain the full scene-level lighting target. |
+| Text, products, complex props, multiple people, or edge contact | Name only the highest-risk protected objects and discourage structural redraw; still allow source-consistent illumination and reflection. |
+| A6 | Do not weaken for a small face. Authorize the full subject interior to become black while locking outline, proportion, pose, composition, and background structure. |
 
-整图提示区分 `structural_invariants`、`authorized_appearance_changes` 和一个正常观看可辨的 `minimum_visible_improvement`。近乎原图不能以“克制”通过。
+For full-frame edits, keep three distinct concepts: `structural_invariants`, `authorized_appearance_changes`, and one `minimum_visible_improvement` observable at normal size. An almost unchanged image cannot pass as a restrained edit.
 
-## 干净真实感
+## Clean Photographic Realism
 
-| 频率 | 通过 | 禁止 |
+| Spatial frequency | Pass | Fail |
 | --- | --- | --- |
-| 低频肤色 | 原肤色基准连续，亮度服从光源，脸耳颈胸宽缓过渡 | 红黄灰斑、脏灰、局部漂白、脸颈断层 |
-| 中频体积 | 颧鼻下颌颈肩由受光、遮挡和投影塑形 | 加深眼袋/法令纹/鼻翼沟，局部 clarity、HDR、强 dodge-and-burn |
-| 高频表面 | 毛孔/绒毛/浅纹/唇纹低对比、低密度、非重复 | 黑点毛孔、全局颗粒、色噪、锐化砂感、粉屑和重复纹理 |
+| Low-frequency color | Source skin baseline remains continuous; luminance follows the light; face, ear, neck, and chest transition broadly. | Red/yellow/gray patches, muddy areas, local whitening, or face-neck separation. |
+| Mid-frequency form | Cheekbone, nose, jaw, neck, and shoulder volume comes from illumination, occlusion, and cast shadow. | Deepened eye bags, smile lines, or alar grooves; local clarity, HDR, or aggressive dodge-and-burn. |
+| High-frequency surface | Pores, vellus hair, shallow lines, and lip texture remain low-contrast, sparse, and nonrepeating. | Black-dot pores, global grain, chroma noise, sharpening grit, powder flakes, or tiled texture. |
 
-黑头、痣、雀斑、卡粉、浮粉和干皮默认只保留源图已有内容；明确新增黑头也仅限高分辨率近景的极少量低对比点。A6 跳过肤质可见性，改查人物内部是否干净连续全黑且无颗粒/彩污/残留面光。
+Preserve blackheads, moles, freckles, powder separation, flaking, and dry skin only when present in the source. If the user explicitly requests new blackheads, allow only a few low-contrast points in a high-resolution close-up. Under A6, replace skin visibility checks with a clean continuous black interior free of grain, color contamination, gray patches, and residual facial light.
 
-## 光影边界
+## Lighting Boundaries
 
-- 先定 `exposure_intent`，再定 Fill、阴影和高光；Fill 只在暗部需可读时使用。
-- 柔光宽缓、硬光边缘清楚；不得新增第二鼻影/眼神光或用烧暗制造体积。
-- 逆光保亮源/背景/轮廓；低调与剪影可近黑，高光优先可自然溢出。
-- 室内窗光需同时解释人物、衣物、墙桌、反射物和房间衰减；证据不足则 `match-source`。
-- A6 强制 `silhouette + fill none`，人物内部全黑；极窄同源轮廓溢光不得侵入内部。
+- Set `exposure_intent` before fill, shadow, and highlight policy. Use fill only when the intended exposure requires readable shadows.
+- Broad sources create broad transitions; small sources create crisp edges. Never add a second nose shadow or catchlight, and never create volume by burning facial lines.
+- Preserve bright sources, background, and rim under backlight. Low-key and silhouette may approach black; highlight-priority may permit controlled bloom or clipping.
+- Indoor window light must explain subject, clothing, wall/furniture, reflective objects, and room falloff together. With insufficient evidence, use `match-source`.
+- A6 forces `silhouette + fill none`; the subject interior is black, with only a narrow source-consistent rim that stays outside it.
 
-画外窗光置信度：`high`=可见窗或至少三类一致证据，可明确 relight；`medium`=两类证据，只低幅修正；`low`=证据不足/冲突，使用 `match-source`。不要把推测写成事实。
+Off-camera window-light confidence: `high` requires a visible window or at least three consistent evidence classes and permits explicit relighting; `medium` requires two and permits only low-amplitude correction; `low` uses `match-source`. Never present an inference as a visible fact.
 
-## 失败映射
+## Failure Mapping
 
-| 失败 | 动作 |
+| Failure | Action |
 | --- | --- |
-| 后端缺严格能力 | `best-effort` 继续生成并说明缺失能力 |
-| 无工具/真实调用失败 | 分别用 `invocation-handoff` / `prompt-only` |
-| 近乎原图、目标/身份/保护/比例失败 | `prompt-handoff`；不得本地修图补救 |
-| 皮肤脏粗或假立体 | 肤质行改为清洁连续 + 低对比，删除局部加深/颗粒 |
-| A6 残留内部细节或灰填 | 删除普通 S、Fill/catchlight/人物受光，明确内部连续全黑 |
+| Backend lacks strict capability | Continue as `best-effort` and disclose the missing capability. |
+| No compatible tool / real tool error | Use `invocation-handoff` / `prompt-only`, respectively. |
+| Nearly unchanged, target missed, identity/protection/framing failed | Use `prompt-handoff`; never repair locally. |
+| Skin becomes dirty, coarse, or artificially sculpted | Replace SKIN with clean continuity plus low-contrast reflection; remove local darkening and grain. |
+| A6 retains interior detail or gray fill | Remove ordinary S, fill, catchlights, and subject lighting; require a continuous black interior. |

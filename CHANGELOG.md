@@ -2,6 +2,13 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] - 2026-08-24
+
+### Changed
+
+- Rewrote all agent-facing runtime instructions and image-edit prompts in precise production English, using explicit source geometry, exposure behavior, falloff, and observable results instead of literal translation.
+- Preserved every lighting, skin, routing, validation, aspect-ratio, and A6 silhouette behavior while standardizing the four-line prompt contract to 40–90 English words.
+
 ## [1.0.3] - 2026-08-23
 
 ### Changed

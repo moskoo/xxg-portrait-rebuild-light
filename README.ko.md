@@ -43,13 +43,13 @@ Skill은 먼저 내부에서 디렉터식 결정을 수행합니다.
 Key 키 라이트 → Exposure 노출 의도 → Fill 필 → Shadow 그림자 → Subject 피사체 → Background 배경 → Atmosphere 분위기
 ```
 
-이미지 모델에 전달하는 프롬프트는 다음 네 줄로 압축합니다.
+이미지 모델에 전달하는 프롬프트는 영어 40–90단어의 네 줄로 압축합니다.
 
 ```text
-편집: 재조명하고 동일 인물, 구조, 표정, 자세, 카메라와 구도를 유지한다.
-조명: 하나의 키 + 노출/암부 전략 + 배경 반응 + 선택적 분위기.
-피부: 얼굴 표시 크기에 맞는 깨끗한 저대비 미세 질감.
-제한: 인물 변경, 스무딩, 지저분한 질감, 배경 재작성을 하지 않는다.
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: One key with explicit direction, exposure consequence, shadow behavior, background response, color temperature, and at most one source-consistent atmosphere.
+SKIN: One clean, low-contrast, scale-aware photographic microtexture target.
+AVOID: The four highest-risk failures for this source image.
 ```
 
 정체성 감사, 물체 목록, 반복되는 부정어, 여러 사진 스타일을 하나의 프롬프트에 쌓지 않습니다. 제약이 서로 상쇄되거나 원본이 그대로 복제되는 현상을 줄이기 위해서입니다.

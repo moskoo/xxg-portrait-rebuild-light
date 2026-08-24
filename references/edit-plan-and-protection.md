@@ -1,59 +1,59 @@
-# 严格局部编辑计划与保护门
+# Strict Local Edit Plan and Protection Gate
 
-仅已验证 `strict-local` 使用本文件；交付模式和工具证据遵循[后端能力契约](backend-and-clean-realism.md)。严格能力不足则转 `best-effort` 继续生成，不创建虚假冻结计划。
+Use this file only with a verified `strict-local` backend. Follow [the backend contract](backend-and-clean-realism.md) for delivery mode and invocation evidence. If strict capability is missing, continue as `best-effort`; do not create a fictional freeze plan.
 
-## 全图盘点
+## Full-Frame Inventory
 
-把画面分成 `r1c1`–`r3c3` 九格，全部查看后才设置 `inventory_complete: true`。逐项登记：
+Divide the frame into `r1c1`–`r3c3` and inspect all nine tiles before setting `inventory_complete: true`. Record each:
 
-- 每只眼/眼睑、眉、鼻翼/鼻孔、唇线/嘴角、下颌、耳、发际线；
-- 头发、辫子、散发、服装、肩带、饰品、手和姿势边界；
-- 每一本书及文字、电脑/手机、杯子、灯具、商品；
-- 门桌椅、书架、植物、墙地面、窗户和触边物体。
+- eye/lid, brow, ala/nostril, lip boundary/corner, jaw, ear, and hairline;
+- hair mass, braid, loose strand, garment, strap, accessory, hand, and pose boundary;
+- book and visible text, computer/phone, cup, lamp, and product;
+- door, table, chair, shelf, plant, wall, floor, window, and object touching a frame edge.
 
-同类物体也分项记录唯一 `id`、描述、tile、`bbox`，必要时加 `mask_path`。用 [edit-plan-template.json](edit-plan-template.json) 建立计划；`protected_item_count`/`inventory_counts` 必须匹配条目。
+Record same-class objects separately with a unique `id`, description, tile, `bbox`, and optional `mask_path`. Build from [edit-plan-template.json](edit-plan-template.json). `protected_item_count` and `inventory_counts` must match the actual entries.
 
-## 编辑计划
+## Edit Plan
 
-严格计划包含：源图尺寸（仅坐标/同尺寸审计）、已验证后端、九格清单、`editable_mask`、冻结条目联合 `protected_mask`、实际曝光/Fill/阴影/高光策略，以及每个必需感知目标的验收视图和标准。
+A strict plan contains: source dimensions for coordinate/same-size audit only; verified backend profile; nine-tile inventory; `editable_mask`; union `protected_mask`; actual exposure, fill, shadow, and highlight policy; and an acceptance view and criterion for every required perceptual target.
 
-只有用户授权对象可标 `authorized-edit`；其余均为 `frozen + required_audit`。整图 `best-effort` 改列：
+Only user-authorized objects may be marked `authorized-edit`; every other item is `frozen + required_audit`. For a full-frame `best-effort` edit, use instead:
 
-- `structural_invariants`：身份几何、构图和物体内容；
-- `authorized_appearance_changes`：皮肤反射、连续色调、目标阴影与场景光响应；
-- `minimum_visible_improvement`：完整画面正常观看可辨。
+- `structural_invariants`: identity geometry, composition, and object content;
+- `authorized_appearance_changes`: skin reflection and continuous tone, target shadows, and scene-wide illumination response;
+- `minimum_visible_improvement`: one result visible at normal full-frame viewing size.
 
-A6 授权人物轮廓内部的亮度、肤色、五官可见性、头发/衣物/饰品表面变黑；冻结外轮廓、比例、姿态、构图和背景。严格蒙版覆盖完整人物内部并止于原轮廓，不得只压暗面部。
+A6 authorizes luminance, skin color, feature visibility, and hair/clothing/accessory surface detail inside the original subject outline to become black. Freeze the outline, proportions, pose, composition, and background. A strict A6 editable mask must cover the complete subject interior and stop at the original outline; do not darken only the face.
 
-## 蒙版门
+## Mask Gate
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/validate_edit_plan.py" EDIT_PLAN.json \
   --output edit-plan-validation.json
 ```
 
-九格、计数、后端、尺寸、冻结覆盖或编辑/保护蒙版任一验证失败，不执行严格方案；修正计划或转 `best-effort`。`bbox` 默认整块保护，需要更精确时提供条目蒙版，不得缩小矩形绕过物体。
+If any tile, count, backend capability, source dimension, frozen coverage, or editable/protected mask intersection fails, do not execute the strict plan. Correct it or continue as `best-effort`. A `bbox` protects its entire rectangle by default; provide an item mask when a tighter shape is required rather than shrinking the box around content.
 
-## 冻结区审计
+## Frozen-Region Audit
 
-仅同尺寸严格结果运行：
+Only for a same-size strict result, run:
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/audit_pixel_regions.py" SOURCE EDITED \
   --manifest EDIT_PLAN.json --output pixel-audit.json
 ```
 
-脚本重验计划并自动覆盖全部 `required_audit`。缺 manifest、漏项/漏审、计数不符、蒙版相交或冻结像素变化均不得返回严格 PASS。等比例缩小时跳过像素差分，改做 `best-effort` 视觉检查。
+The script revalidates the plan and automatically covers every `required_audit` item. A missing manifest, omitted item/audit, count mismatch, mask overlap, or changed frozen pixel cannot return strict PASS. For a uniformly downscaled result, skip pixel differencing and perform `best-effort` visual validation.
 
-## 目标改善
+## Target Improvement
 
-为每个 `perceptual_targets` 记录 `status`、具体 `finding` 和完整画面/规定倍率 `evidence`，再运行：
+For every `perceptual_targets` item, record `status`, a concrete `finding`, and evidence from the full frame or specified zoom. Then run:
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/validate_result_assessment.py" \
   EDIT_PLAN.json RESULT_ASSESSMENT.json --output target-validation.json
 ```
 
-正常倍率几乎无改善时必须 `fail`，不能用差分图或“处理克制”代替目标达成。A6 必需目标：整个人物内部连续全黑，无五官/肤色/眼神光/发丝高光/衣纹，同时保持外轮廓、比例、姿态、位置和背景；普通肤质目标标为不适用。
+Mark an almost unchanged result `fail`; a difference map or `restrained processing` does not establish improvement. For A6, require the complete subject interior to be continuous black with no facial feature, skin color, catchlight, lit hair strand, or garment texture, while outline, proportions, pose, position, and background remain stable. Mark ordinary skin-texture targets not applicable.
 
-任一必需目标未达标就进入 `prompt-handoff`：说明失败并从原图重编完整短提示，不做本地补救，不把失败图作为成品。
+If any required target fails, enter `prompt-handoff`: report the failure and return a complete compact prompt recompiled from the source. Do not repair locally or present the failed image as final.

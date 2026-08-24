@@ -1,122 +1,126 @@
-# 紧凑提示词编译器
+# Compact Prompt Compiler
 
-## 输出契约
+## Contents
 
-只发送模型完成编辑所需的信息：一个结构锁、一个主光/曝光逻辑、一个肤质尺度、一个色温和最多一个氛围。默认 `100–180` 个中文字符；复杂文字/商品场景最多 `260` 个。
+[Output contract](#output-contract) · [Observable outcomes](#observable-outcomes) · [Production prompts](#six-production-prompts) · [Skin clauses](#scale-aware-skin-clauses) · [Failure rewrites](#replace-one-failed-line) · [Forbidden language](#forbidden-prompt-language)
+
+## Output Contract
+
+Send only the information needed to perform the edit: one structural lock, one key/exposure system, one scale-aware skin target, one color-temperature relationship, and at most one atmosphere. Target `40–90` English words; allow up to `120` for dense text or product scenes.
 
 ```text
-编辑：重照明；保持同一人物、原结构、表情、姿态、镜头与构图。
-光影：{L + 曝光/暗部 + 背景响应} {A} {T}。
-肤质：{S}。
-限制：不改脸、不磨皮、不颗粒/脏化、不重绘背景。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: {L + exposure/shadow behavior + background response} {A} {T}.
+SKIN: {S}.
+AVOID: identity drift, beauty smoothing, dirty or grainy skin, and structural background redraw.
 ```
 
-编译规则：
+Compile by these rules:
 
-1. 从[配方](lighting-skin-color-temperature-recipes.md)各取一个 L/S/T 和零个或一个 A，只使用提示句；
-2. 把方向、软硬、落点、暗部和背景响应合并成一个可观察结果；
-3. 身份只锁一次，保护物最多点名三类；不写编号、审计、置信度或后端说明；
-4. 删除同义形容词和冲突要求；限制只留本图最可能发生的四项；
-5. 重试时替换失败行，不追加说明。
+1. Select one L, one S, one T, and zero or one A from [the recipe library](lighting-skin-color-temperature-recipes.md); copy behavior, never recipe codes.
+2. Express direction, apparent source size, falloff, landing area, shadow depth, and background response as one observable lighting result.
+3. Lock identity once. Name no more than three protected object categories. Omit audits, confidence, backend details, and reasoning.
+4. Remove synonymous adjectives and conflicting instructions. Keep only the four failure modes most likely for the source.
+5. On retry, replace the failed line; never append a corrective paragraph.
 
-### A6 覆盖
+### A6 Override
 
-含 A6 时固定剪影曝光：删除 L 的人物正/侧面受光及全部 Fill、catchlight、内部高光；L/T 仅控制背光和背景。光影行写“人物内部连续全黑，只保留原外轮廓、比例和姿态”，肤质行改为“剪影内部不显示人物细节”。
+For A6, force silhouette exposure. Remove all frontal/side illumination, fill, catchlights, and internal highlights from L. Use L and T only to design the backlight and background. State `the entire subject interior forms one continuous black silhouette; retain only the original outline, proportions, and pose`. Replace the SKIN line with `No facial, skin, hair, clothing, accessory, or body detail is visible inside the silhouette.`
 
-## 可观察目标
+## Observable Outcomes
 
-| 场景 | 写结果，不写空泛风格词 |
+| Scene | Specify this result instead of style adjectives |
 | --- | --- |
-| 逆光 | 亮源与发丝轮廓保留，背光面按曝光变深暗、局部剪影或低幅补亮 |
-| 窗光 | 左明右暗的宽缓渐变同时落在人物与墙面 |
-| 杂志 | 短柔鼻影、单一眼神光、深柔面颊层次 |
-| 暗调 | 光带穿过眼鼻颊，带外深暗且轮廓干净 |
-| 黄金时刻 | 暖色侧逆光勾勒发丝，背光侧自然深影 |
-| 霓虹 | 青色轮廓与洋红侧光方向/主次分明 |
-| A6 | 亮背景前的整个人物内部全黑，仅原外轮廓和姿态可辨 |
+| Backlight | Retain the bright source and hair rim; let the camera-facing side fall naturally into deep shadow, partial silhouette, or low-level reflected fill according to exposure intent. |
+| Window light | A broad directional luminance gradient crosses both the subject and nearby wall or furniture. |
+| Editorial | A short soft nose shadow, one source-consistent catchlight, and deep but smooth far-cheek modeling. |
+| Low-key beam | A narrow beam follows facial curvature across the eye, nose, and cheek; areas outside it remain deep and clean. |
+| Golden hour | Warm side-backlight defines hair and shoulders; the camera-facing side remains naturally darker. |
+| Neon | One colored key and one secondary rim have distinct directions and intensities. |
+| A6 | Against a luminous background, the complete subject interior is black; only the original outline and pose remain readable. |
 
-## 六个短提示
+## Six Production Prompts
 
-### 经典杂志
-
-```text
-编辑：重照明；保持同一人物、原结构、表情、姿态、镜头与构图。
-光影：左前上大型柔光塑造伦勃朗光，弱 Fill 留眼窝，另一侧面颊深柔，仅一处同源眼神光；背景低对比中性日光。
-肤质：白皙健康、低对比微纹理，保留原唇纹和眼周层次。
-限制：不改脸、不磨皮、不颗粒/脏化、不重绘背景。
-```
-
-### 电影低调冷暖
+### Classic Editorial
 
 ```text
-编辑：重照明；保持同一人物、原结构、表情、姿态、镜头与构图。
-光影：暖色侧主光，低调无正面补光，背光侧近黑；冷色仅在背景与轮廓，微弱体积光同向。
-肤质：干净连续、低对比微纹理，不加深眼袋或法令纹。
-限制：不改脸、不脏灰、不双重阴影、不全局橙青滤镜。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: Use a large soft key above camera-left for restrained Rembrandt modeling, minimal fill in the eye socket, a deep soft far-cheek shadow, one source-consistent catchlight, and a low-contrast neutral-daylight background.
+SKIN: Keep fair, healthy skin with clean low-contrast microtexture and the original lip and eye-area detail.
+AVOID: identity drift, beauty smoothing, added grain, or background redesign.
 ```
 
-### 黄金时刻逆光
+### Cinematic Low-Key Warm/Cool
 
 ```text
-编辑：重照明；保持同一人物、原结构、姿态、镜头与构图。
-光影：暖色夕阳从侧后方勾勒发丝肩部，按高光曝光且无正面 Fill；背光侧自然深暗，背景同向暖光与长影，仅一处轻柔光晕。
-肤质：仅受光区呈干净健康的低对比微纹理。
-限制：不改脸、不平均提亮、不全局橙染、不抠图白边。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: Use a warm side key with low-key exposure and no frontal fill; let the far side approach black. Confine cool ambience to the background and rim, with only faint source-aligned atmospheric light.
+SKIN: Keep illuminated skin clean and continuous with low-contrast microtexture; do not deepen eye bags or smile lines.
+AVOID: identity drift, muddy gray skin, duplicate shadows, or a global orange-teal grade.
 ```
 
-### 赛博朋克霓虹
+### Golden-Hour Backlight
 
 ```text
-编辑：重照明；保持同一人物、原结构、表情、姿态、服装与构图。
-光影：青色轮廓与洋红侧主光方向分明，低调无白色 Fill；未受光面深暗，Bokeh 仅在离焦背景。
-肤质：保留自然反射与低对比微纹理。
-限制：不改脸、不满脸染色、不双重鼻影、不覆盖眼睛。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, pose, camera view, and composition.
+LIGHT: Place warm sunset light behind and to one side, outlining hair and shoulders. Expose for the bright rim with no frontal fill; let the camera-facing side fall into natural deep shadow, and align one restrained flare and the background's warm response with the source.
+SKIN: Show clean low-contrast microtexture only where light genuinely reaches the skin.
+AVOID: identity drift, flat fill, global orange tint, or cutout halos.
 ```
 
-### 柔和窗光
+### Cyan/Magenta Neon
 
 ```text
-编辑：重照明；保持同一人物、原结构、姿态、场景物体与构图。
-光影：左前上柔窗光形成宽缓左明右暗，微弱室内 Fill 留暗侧；人物、衣物和墙面同向衰减，可加一层连续柔窗影。
-肤质：干净健康、低对比微纹理，保留原唇纹和眼周层次。
-限制：不改脸、不贴纸光斑、不脏灰、不重绘场景。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, wardrobe, and composition.
+LIGHT: Use a magenta side key and a weaker cyan rim from the opposite rear direction. Keep exposure low-key with no white fill; unlit planes remain deep, while bokeh stays only in the optically defocused background.
+SKIN: Preserve natural reflective response and low-contrast microtexture under the colored light.
+AVOID: identity drift, full-face color wash, duplicate nose shadows, or light covering the eyes.
 ```
 
-### A6 全黑剪影
+### Soft Window Light
 
 ```text
-编辑：重照明；保持人物原外轮廓、比例、姿态、镜头与构图。
-光影：按背后亮源曝光，取消 Fill、眼神光和内部受光；整个人物连续全黑，仅外轮廓可辨，背景正常响应。
-肤质：剪影内部不显示五官、肤色、发丝、衣纹或饰品。
-限制：不改轮廓/比例/姿态，不灰填、不白边、不残留面光。
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, pose, scene objects, and composition.
+LIGHT: Use a soft window key above camera-left to create a broad left-to-right falloff. Add only weak room bounce on the shadow side; carry the same direction and decay across skin, clothing, and the nearby wall, with one continuous soft window shadow if requested.
+SKIN: Keep clean healthy tone, low-contrast microtexture, and the original lip and eye-area detail.
+AVOID: identity drift, pasted-on patches, muddy shadows, or scene redesign.
 ```
 
-## S 句
+### A6 Full-Black Silhouette
 
-| 配方 | 提示句 |
+```text
+EDIT: Relight this portrait; retain the subject's original outline, proportions, pose, camera view, and composition.
+LIGHT: Expose for the bright source behind the subject. Remove fill, catchlights, and all internal illumination; render the entire subject as one continuous black silhouette while the background responds naturally to the backlight.
+SKIN: No facial, skin, hair, clothing, accessory, or body detail is visible inside the silhouette.
+AVOID: outline drift, gray fill, cutout halos, or residual facial light.
+```
+
+## Scale-Aware Skin Clauses
+
+| Recipe | Model-facing clause |
 | --- | --- |
-| S0 `<256 px` | 干净连续肤色与自然反射；不新增毛孔、黑头、绒毛或细纹 |
-| S1 `256–511 px` | 白皙健康、低对比微纹理；保留原唇纹、眼周层次和克制额头反光 |
-| S2 `≥512 px` | 干净相机微纹理；脸颊孔理柔和、鼻头略清晰，保留原浅纹、细绒毛与标志 |
+| S0 `<256 px` | Render clean continuous skin tone and source-consistent reflection; do not invent pores, blackheads, vellus hair, moles, or fine lines. |
+| S1 `256–511 px` | Keep fair, healthy skin with low-contrast irregular microtexture; retain source lip texture, eye-area transitions, and restrained forehead sheen. |
+| S2 `≥512 px` | Render clean camera-resolved microtexture: softer cheek pores, slightly crisper nose pores, plus original fine lines, vellus hair, and identifying marks. |
 
-## 失败时替换一行
+## Replace One Failed Line
 
-| 失败 | 替换方式 |
+| Failure | Replacement strategy |
 | --- | --- |
-| 近乎原图 | 光影行改为明确方向、落点和可见结果，删除“轻微/尽量/最小变化” |
-| 改脸 | 编辑行只留“同一人物、原结构、表情与构图”，不描述五官形状 |
-| 皮肤变脏 | 肤质行改为“干净连续肤色 + 低对比反射微纹理” |
-| 光线太杂 | 只留一个 Key、必要 Fill 和一个背景响应 |
-| 假光斑 | 写明来源、落点、边缘，并让人物与邻近表面连续响应 |
-| 非预期暗部丢失 | 仅 balanced/source-matched 增加 Fill；低调、高光优先和剪影不补亮 |
-| A6 仍见内部细节 | 删除普通 S 与人物受光，明确“内部连续全黑，无 Fill/catchlight/肤色/衣纹” |
+| Nearly unchanged | Rewrite LIGHT with one explicit direction, landing area, exposure consequence, and visible result; remove `subtle`, `minimal`, and `change as little as possible`. |
+| Identity drift | Reduce EDIT to `retain the same subject, original facial geometry, expression, and composition`; never describe a more attractive feature shape. |
+| Dirty skin | Replace SKIN with `clean continuous skin tone and low-contrast reflective microtexture`. |
+| Competing lights | Keep one key, only the necessary fill, and one background response. |
+| Artificial patch or flare | State the source, physical landing area, edge behavior, and continuous response across subject and nearby surface. |
+| Unintended shadow loss | Add fill only for `balanced` or `source-matched`; never lift low-key, highlight-priority, or silhouette shadows by default. |
+| A6 retains interior detail | Remove ordinary S and subject lighting; require `continuous black interior with no fill, catchlight, skin color, hair detail, or garment texture`. |
 
-## 禁用表达
+## Forbidden Prompt Language
 
-- 完全不变、最小像素变化、所有细节逐项锁定；
-- 完美对称、五官精致化、黄金比例、无瑕瓷肌；
-- 超清毛孔、大片黑头、粗粝原生肌、强颗粒/HDR/局部清晰度；
-- 同时堆叠柔窗光、硬光、伦勃朗光、霓虹、夕阳和体积光；
-- 所有光型都要求全脸清楚、不过曝且暗部全有细节；
-- A6 同时要求肤质、眼神光、面部补光、发丝或衣物内部细节；
-- 只有“高级/电影感/氛围拉满”，没有光源方向与落点。
+- `change nothing`, `minimal pixel change`, or exhaustive per-object locking;
+- perfect symmetry, idealized features, golden facial proportions, or flawless porcelain skin;
+- ultra-sharp pores, abundant blackheads, coarse raw skin, strong grain, HDR, or local-clarity sculpting;
+- stacking soft window light, hard light, Rembrandt light, neon, sunset, and volumetric rays in one edit;
+- demanding a fully readable face, no clipped highlights, and complete shadow detail under every lighting intent;
+- combining A6 with visible skin texture, catchlights, facial fill, hair strands, or garment detail;
+- vague terms such as `premium`, `cinematic`, or `atmospheric` without source direction and landing behavior.

@@ -46,10 +46,10 @@ Key light → Exposure intent → Fill → Shadow → Subject → Background →
 The prompt sent to the image model is compressed into four lines, usually 40–90 English words:
 
 ```text
-Edit: relight; keep the same person, structure, expression, pose, camera, and composition.
-Lighting: one key + exposure/shadow strategy + background response + optional atmosphere.
-Skin: clean low-contrast microtexture matched to visible face scale.
-Constraints: no identity change, smoothing, dirty texture, or background redraw.
+EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
+LIGHT: One key with explicit direction, exposure consequence, shadow behavior, background response, color temperature, and at most one source-consistent atmosphere.
+SKIN: One clean, low-contrast, scale-aware photographic microtexture target.
+AVOID: The four highest-risk failures for this source image.
 ```
 
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.
