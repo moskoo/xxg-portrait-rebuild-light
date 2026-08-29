@@ -8,18 +8,20 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.0.0-black?style=flat-square" alt="Version 2.0.0"></a>
 </p>
 
 English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-`xxg-portrait-rebuild-light` is an image-edit skill for existing portrait photos. It reconstructs the key light, fill, shadows, and background atmosphere with a director-led lighting workflow while restoring clean, healthy, low-contrast photographic skin microtexture.
+`xxg-portrait-rebuild-light` is an image-edit skill for existing portraits. V2 separates lighting, broad skin tone, bounded reflection, scale/focus-aware microdetail, and skin finish so realism no longer depends on adding dirt, darkness, grain, or random imperfections.
 
 The skill changes the lighting without redrawing the person. It preserves identity, facial structure and proportions, natural slight asymmetry, expression, pose, camera view, and composition. It avoids plastic skin, grainy skin, dirty color variation, and fake depth made by exaggerating wrinkles.
 
 ## Key features
 
-- Repairs plastic smoothness, excessive skin smoothing, and wax-like rendering.
-- Preserves original lip lines, eye-area detail, restrained sebum highlights, and scale-appropriate microtexture.
+- Provides `texture-only` fidelity recovery without changing source lighting, color, focus, depth of field, or scene content.
+- Repairs plastic smoothness by separating clean broad tone, source-shaped highlights, and scale/focus-aware regional microdetail.
+- Adds seven skin-finish profiles (`P0–P6`) for source-matched, satin-matte, soft-daylight, editorial, direct-flash, beauty, and available-light response.
 - Repairs weak backlighting, disconnected indoor window light, flat lighting, unintended crushed shadows, and highlights with no physical source.
 - Supports soft window light, commercial soft light, Rembrandt lighting, cinematic low-key lighting, golden hour, dual-color neon, and diagonal hard light.
 - Adds at most one physically coherent atmosphere effect: window shadow, tree shadow, background bokeh, sunset flare, subtle volumetric light, or a full-black backlit subject silhouette.
@@ -40,30 +42,30 @@ The skill changes the lighting without redrawing the person. It preserves identi
 The skill first makes a director-style lighting decision internally:
 
 ```text
-Key light → Exposure intent → Fill → Shadow → Subject → Background → Atmosphere
+Scope → Key → Exposure → Fill → Shadow → Skin scale → Skin finish → Background → Atmosphere
 ```
 
-The prompt sent to the image model is compressed into four lines, usually 40–90 English words:
+The prompt sent to the image model is compressed into four lines, usually 45–95 English words:
 
 ```text
-EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
-LIGHT: One key with explicit direction, exposure consequence, shadow behavior, background response, color temperature, and at most one source-consistent atmosphere.
-SKIN: One clean, low-contrast, scale-aware photographic microtexture target.
-AVOID: The four highest-risk failures for this source image.
+EDIT: Choose texture-only or relight-and-skin; retain source identity, geometry, expression, pose, focal plane, depth of field, camera view, and composition.
+LIGHT: One key with explicit direction, exposure consequence, shadow transition, background response, color, and at most one source-consistent atmosphere.
+SKIN: One scale-aware S behavior plus one source-consistent P finish, with continuous tone and bounded highlights.
+AVOID: Identity drift, whole-face gloss, repeated texture, or structural scene redraw.
 ```
 
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.
 
-Physical lighting takes priority over keeping every detail visible. The skill selects an exposure intent from `source-matched`, `balanced`, `highlight-priority`, `shadow-priority`, `low-key`, `silhouette`, and `high-key`. Sunset backlight may naturally darken the unlit side of the face or create a partial silhouette. Low-key and hard lighting may contain near-black shadows. Fill is used only when information that should remain readable is lost without a plausible cause.
+For skin-only requests, V2 forces `L0 + T0 + A0` and preserves the original highlight map, exposure, white balance, focus, and depth of field. For relighting, it selects an exposure intent from `source-matched`, `balanced`, `highlight-priority`, `shadow-priority`, `low-key`, `silhouette`, and `high-key`. Unspecified edits default to clean `source-matched` or `balanced` exposure; dramatic darkness is used only when explicitly requested.
 
-`A6` is a forced override: whenever selected, it switches to silhouette exposure, moves the effective light behind the person, removes all fill and catchlights, and renders the entire subject interior black. The selected L and T recipes control only the backlight and background response; the S recipe is not rendered visibly.
+`A6` is a forced override: whenever selected, it switches to silhouette exposure, moves the effective light behind the person, removes all fill and catchlights, and renders the entire subject interior black. L and T control only the rear source and background; S and P are suppressed.
 
 ## Recipes
 
 Choose only:
 
 ```text
-one L lighting recipe + one S skin recipe + one T color-temperature recipe + zero or one A atmosphere recipe
+one L lighting recipe + one S skin-scale recipe + one P skin-finish recipe + one T color-temperature recipe + zero or one A atmosphere recipe
 ```
 
 ### Lighting L
@@ -84,13 +86,25 @@ one L lighting recipe + one S skin recipe + one T color-temperature recipe + zer
 | `L11` | Cyberpunk cyan/magenta dual-tone neon |
 | `L12` | Clean, even commercial soft light |
 
-### Skin S
+### Skin scale S
 
 | Code | Purpose |
 | --- | --- |
 | `S0` | Small face or wide shot; restore only clean skin tone and natural reflection |
 | `S1` | Default for medium shots; low-contrast microtexture with original lip and eye-area detail |
 | `S2` | High-resolution close-up; region-aware pores, fine vellus hair, and existing details |
+
+### Skin finish P
+
+| Code | Purpose |
+| --- | --- |
+| `P0` | Preserve the exact source diffuse/specular response; default for texture-only edits |
+| `P1` | Natural satin-matte balance with bounded key-facing highlights |
+| `P2` | Soft-daylight luminous midtones and broad highlight roll-off |
+| `P3` | Editorial satin response with controlled T-zone highlights |
+| `P4` | Direct-flash response with compact separated highlights |
+| `P5` | Clean beauty response without porcelain uniformity |
+| `P6` | Available-light response with source focus falloff and no added grain or marks |
 
 ### Color temperature T
 
@@ -204,50 +218,50 @@ Copy the complete `xxg-portrait-rebuild-light/` directory into the agent's perso
 ### Classic fashion editorial
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this portrait with L8 + S2 + T1 + A0.
+Use $xxg-portrait-rebuild-light to edit this portrait with L8 + S2 + P3 + T1 + A0.
 A large soft key from the upper front-side creates restrained Rembrandt lighting; subtle fill preserves the eye socket, one cheek falls into a deep soft shadow, and the eyes receive one source-consistent catchlight. Keep the skin clean and healthy with low-contrast photographic microtexture.
 ```
 
 ### Cinematic low-key warm/cool
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this portrait with L9 + S1 + T3 + A5.
-A warm side key shapes the lit and shadow sides. Use low-key exposure with no frontal fill, allowing the unlit side to approach black. Keep cool color only in the background and rim, with extremely subtle volumetric dust; no dirty gray skin or exaggerated wrinkles.
+Use $xxg-portrait-rebuild-light to edit this portrait with L9 + S1 + P3 + T3 + A5.
+A warm side key shapes selected illuminated planes under explicit low-key exposure with no frontal fill. Keep cool color only in the background and rim, with extremely subtle source-aligned haze; illuminated skin remains chromatically clean and facial lines are not used for sculpting.
 ```
 
 ### Golden-hour backlight
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this portrait with L10 + S1 + T2 + A4.
+Use $xxg-portrait-rebuild-light to edit this portrait with L10 + S1 + P2 + T2 + A4.
 Warm sunset light from the side-rear outlines the hair and shoulders. Expose for the sunset highlights with no frontal fill; let the unlit side of the face fall naturally into a partial silhouette, allow slight bloom on lit edges, and give the background matching oblique warm light and long shadows.
 ```
 
 ### Cyberpunk neon
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this night portrait with L11 + S1 + T4 + A3.
+Use $xxg-portrait-rebuild-light to edit this night portrait with L11 + S1 + P6 + T4 + A3.
 Separate the cyan rim light clearly from the magenta key while preserving a natural skin-tone zone in the center of the face. Keep bokeh only in the defocused background, never over the eyes or skin.
 ```
 
 ### Full-black backlit silhouette
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this portrait with L10 + S1 + T2 + A6.
+Use $xxg-portrait-rebuild-light to edit this portrait with L10 + S1 + P0 + T2 + A6.
 Place the effective light behind the person and expose for the bright background. Remove all frontal and side fill, catchlights, and internal subject illumination. Render the face, skin, hair, clothing, and body as one clean continuous black silhouette while preserving the original outer contour, proportions, pose, camera view, and composition.
 ```
 
 ### Soft window light with window shadow
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this indoor portrait with L2 + S1 + T1 + A1.
+Use $xxg-portrait-rebuild-light to edit this indoor portrait with L2 + S1 + P2 + T1 + A1.
 Soft window light from the upper-left front creates a broad, gradual left-to-right falloff; faint room fill preserves the shadow side. One low-contrast window shadow continues across the person and adjacent wall and must not look pasted on.
 ```
 
 ### Portrait with tree shadows
 
 ```text
-Use $xxg-portrait-rebuild-light to edit this outdoor portrait with L4 + S1 + T1 + A2.
-Broad skylight illuminates the person. Sparse tree shadows break softly across facial and clothing curvature, may cross parts of the eyes and cheeks where physically plausible, and continue into the background in the same direction. Keep shadows clean and free of unexplained dirty patches.
+Use $xxg-portrait-rebuild-light to edit this outdoor portrait with L4 + S1 + P2 + T1 + A2.
+Broad skylight illuminates the person. Sparse tree shadows break softly across facial and clothing curvature, may cross parts of the eyes and cheeks where physically plausible, and continue into the background in the same direction with source-consistent color and smooth transitions.
 ```
 
 ## Output standard
@@ -256,8 +270,8 @@ Broad skylight illuminates the person. Sparse tree shadows break softly across f
 - The subject remains the same person; facial features are neither beautified nor made artificially symmetrical.
 - Subject, clothing, and background obey the same light sources.
 - Shadow depth, highlight roll-off, and silhouette strength follow the selected exposure intent instead of flattening the scene to keep everything visible.
-- Skin remains fair, healthy, clean, and continuous, with low-contrast photographic microtexture that is never rough or blotchy.
-- Grain, chromatic noise, dirty gray shadows, local oversharpening, and exaggerated wrinkles are not used to imitate realism.
+- Source complexion remains clean and continuous, with bounded source-shaped highlights and regional detail limited by scale, focus, and illumination.
+- Grain, added marks, random color variation, global sharpening, and darker facial lines are never used to imitate realism.
 - Window shadows, tree shadows, bokeh, sunset flare, and light beams have a plausible source and landing area.
 - With `A6`, the complete subject interior is clean black with no facial, skin, hair, clothing, or catchlight detail; identity continuity is judged from the preserved outer contour, proportions, pose, and framing.
 - Preserve composition, orientation, aspect ratio, and the subject's share of the frame. Proportional downscaling to an image model's maximum resolution is allowed; exact source pixel dimensions are not required.

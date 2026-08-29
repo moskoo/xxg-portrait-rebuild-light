@@ -3,6 +3,18 @@
   "source_image": "/absolute/path/source.png",
   "source_size": [1672, 941],
   "delivery_mode": "strict-final",
+  "operation_scope": "relight-and-skin",
+  "recipe_selection": {
+    "lighting": "L2",
+    "skin_scale": "S1",
+    "skin_finish": "P2",
+    "color_temperature": "T1",
+    "atmosphere": "A0"
+  },
+  "optics_policy": {
+    "focal_plane": "preserve-source",
+    "depth_of_field": "preserve-source"
+  },
   "backend": {
     "id": "verified-local-editor",
     "classification": "strict-local",
@@ -31,7 +43,7 @@
     {
       "id": "eyes-and-eyelids",
       "category": "identity-boundary",
-      "description": "双眼、虹膜和眼睑边缘",
+      "description": "Both eyes, irises, and eyelid boundaries",
       "tile_ids": ["r1c2", "r2c2"],
       "bbox": [500, 300, 820, 440],
       "mask_path": "/absolute/path/eyes-mask.png",
@@ -41,7 +53,7 @@
     {
       "id": "handheld-book",
       "category": "text",
-      "description": "人物手持且带印刷文字的书本",
+      "description": "Handheld book with printed text",
       "tile_ids": ["r2c2"],
       "bbox": [650, 405, 750, 535],
       "protection": "frozen",
@@ -54,19 +66,19 @@
     {
       "id": "lighting-direction",
       "required": true,
-      "acceptance_view": "完整画面和100%脸部对比",
+      "acceptance_view": "Full frame and 100% face comparison",
       "atmosphere_recipe": "A0",
       "exposure_intent": "source-matched",
       "fill_policy": "ambient-reflection",
       "shadow_policy": "retained-detail",
       "highlight_policy": "retained",
-      "acceptance_criterion": "主光方向、曝光意图、阴影深度和高光滚降均可辨且物理一致，不新增光源、接缝或假立体"
+      "acceptance_criterion": "The selected key direction, exposure consequence, shadow transition, highlight roll-off, and background response are visible and physically coherent without duplicate sources or artificial sculpting."
     },
     {
       "id": "clean-skin-realism",
       "required": true,
-      "acceptance_view": "正常观看和像素尺度规定的放大倍率",
-      "acceptance_criterion": "皮肤改善可辨且仍干净连续，无脏化、颗粒、斑驳或塑料感"
+      "acceptance_view": "Normal viewing size and the face-scale-defined close view",
+      "acceptance_criterion": "Skin first reads clean and continuous, with bounded source-shaped highlights and faint regional detail limited by scale, focus, and illumination; no uniform gloss or texture overlay."
     }
   ]
 }

@@ -8,17 +8,21 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.0.0-black?style=flat-square" alt="Version 2.0.0"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | 日本語 | [한국어](README.ko.md)
 
 
-`xxg-portrait-rebuild-light` は、既存のポートレート写真を対象とする image edit Skill です。ディレクター視点のライティング設計により、キーライト、フィルライト、影、背景の雰囲気を再構築しながら、清潔で健康的な、低コントラストの写真的な肌の微細質感を回復します。
+`xxg-portrait-rebuild-light` は、既存のポートレート写真を対象とする image edit Skill です。V2 は、光、肌の広い色調、局所反射、スケールと焦点に応じた微細質感、肌の写真的仕上がりを分離して制御し、汚れ、暗さ、粒子、ランダムな欠点に頼らずリアリティを作ります。
 
 人物を描き直すのではなく、光を変えることを重視します。同一人物であること、顔の構造と比率、自然なわずかな左右差、表情、ポーズ、カメラ視点、構図を維持し、プラスチック肌、粒状肌、汚れた色むら、しわを強調して作る偽の立体感を避けます。
 
 ## 主な機能
 
+- `texture-only` により、元の光、色、焦点、被写界深度、シーン内容を変えずに肌の忠実度だけを回復。
+- 清潔な広域色調、元の光源に沿う限定的なハイライト、部位別の微細質感を分離してプラスチック感を解消。
+- 元画像一致、サテンマット、柔らかな昼光、エディトリアル、直射フラッシュ、ビューティー、環境光の `P0–P6` を搭載。
 - プラスチックのような平滑さ、過度な美肌処理、蝋人形のような質感を修正。
 - 元の唇のしわ、目元の階調、控えめな皮脂反射、顔の表示サイズに合う微細質感を保持。
 - 弱い逆光、室内の不自然に分断された窓光、平板な光、意図しない黒つぶれ、光源のないハイライトを修正。
@@ -41,30 +45,30 @@
 Skill は最初に内部でディレクター式の判断を行います。
 
 ```text
-Key キーライト → Exposure 露出意図 → Fill フィル → Shadow 影 → Subject 主体 → Background 背景 → Atmosphere 雰囲気
+Scope 作用範囲 → Key キーライト → Exposure 露出意図 → Fill フィル → Shadow 影 → Skin scale 肌スケール → Skin finish 肌仕上げ → Background 背景 → Atmosphere 雰囲気
 ```
 
-画像モデルへ渡すプロンプトは、英語 40〜90 語の 4 行に圧縮します。
+画像モデルへ渡すプロンプトは、英語 45〜95 語の 4 行に圧縮します。
 
 ```text
-EDIT: Relight this portrait; retain the same person's identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, camera view, and composition.
-LIGHT: One key with explicit direction, exposure consequence, shadow behavior, background response, color temperature, and at most one source-consistent atmosphere.
-SKIN: One clean, low-contrast, scale-aware photographic microtexture target.
-AVOID: The four highest-risk failures for this source image.
+EDIT: Choose texture-only or relight-and-skin; retain source identity, geometry, expression, pose, focal plane, depth of field, camera view, and composition.
+LIGHT: One key with explicit direction, exposure consequence, shadow transition, background response, color, and at most one source-consistent atmosphere.
+SKIN: One scale-aware S behavior plus one source-consistent P finish, with continuous tone and bounded highlights.
+AVOID: Identity drift, whole-face gloss, repeated texture, or structural scene redraw.
 ```
 
 同一性監査、物体一覧、重複するネガティブ語、複数の撮影スタイルを一つのプロンプトに詰め込みません。制約同士が相殺されたり、元画像がそのまま複製されたりするのを防ぐためです。
 
-「すべてを明瞭に見せる」ことより、光源の物理的効果を優先します。露出意図は `source-matched`、`balanced`、`highlight-priority`、`shadow-priority`、`low-key`、`silhouette`、`high-key` から選びます。夕日の逆光では顔の非照明側が自然に暗くなったり、部分的なシルエットになったりします。ローキーや硬い光では黒に近い影も許容します。本来読めるべき情報が、根拠なく暗部で失われる場合にだけフィルを使います。
+肌だけを直す場合、V2 は `L0 + T0 + A0` を強制し、元のハイライト位置、露出、ホワイトバランス、焦点、被写界深度を維持します。再照明では `source-matched`、`balanced`、`highlight-priority`、`shadow-priority`、`low-key`、`silhouette`、`high-key` から露出意図を選択します。指定がなければ清潔な元画像一致または均衡露出を使い、劇的な暗さは明示された場合だけ適用します。
 
-`A6` は強制上書きです。選択すると必ずシルエット露出へ切り替え、有効な主光を人物の後方へ移し、すべてのフィルとキャッチライトをなくして人物内部全体を黒にします。選択した L と T は逆光と背景の反応だけを制御し、S の肌質は画面に表示しません。
+`A6` は強制上書きです。選択すると必ずシルエット露出へ切り替え、有効な主光を人物の後方へ移し、すべてのフィルとキャッチライトをなくして人物内部全体を黒にします。L と T は逆光と背景だけを制御し、S と P は無効になります。
 
 ## レシピ
 
 一度に選ぶのは次の組み合わせだけです。
 
 ```text
-L ライティングを 1 つ + S 肌を 1 つ + T 色温度を 1 つ + A 雰囲気を 0 または 1 つ
+L ライティングを 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1 つ + T 色温度を 1 つ + A 雰囲気を 0 または 1 つ
 ```
 
 ### ライティング L
@@ -85,13 +89,25 @@ L ライティングを 1 つ + S 肌を 1 つ + T 色温度を 1 つ + A 雰囲
 | `L11` | サイバーパンクのシアン／マゼンタ 2 色ネオン |
 | `L12` | 清潔で均一な商業用ソフトライト |
 
-### 肌 S
+### 肌スケール S
 
 | コード | 用途 |
 | --- | --- |
 | `S0` | 顔が小さい、または遠景。清潔な肌色と自然な反射のみを回復 |
 | `S1` | 中景の既定。低コントラストの微細質感と元の唇・目元のディテール |
 | `S2` | 高解像度のクローズアップ。部位ごとの毛穴、産毛、既存ディテール |
+
+### 肌仕上げ P
+
+| コード | 用途 |
+| --- | --- |
+| `P0` | 元画像の拡散反射と鏡面反射を正確に維持。texture-only の既定値 |
+| `P1` | 自然なサテンマット。キーライト側だけに限定的なハイライト |
+| `P2` | 柔らかな昼光。明るい中間調と幅広いハイライトのロールオフ |
+| `P3` | エディトリアルなサテン。T ゾーンのハイライトを制御 |
+| `P4` | 直射フラッシュ。小さく分離したハイライトで全顔を油光にしない |
+| `P5` | 清潔なビューティー仕上げ。陶器のような均一さは作らない |
+| `P6` | 環境光。元の焦点減衰を維持し、粒子や新しい欠点を追加しない |
 
 ### 色温度 T
 
@@ -205,50 +221,50 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 ### クラシックなファッション誌風
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L8 + S2 + T1 + A0 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L8 + S2 + P3 + T1 + A0 として編集する。
 前方斜め上の大型ソフトライトで控えめなレンブラント光を作り、弱いフィルで眼窩を残す。片側の頬は深く柔らかな影にし、光源と一致するキャッチライトを一つだけ入れる。肌は清潔で健康的な低コントラストの写真的微細質感にする。
 ```
 
 ### 映画的なローキーの寒暖
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L9 + S1 + T3 + A5 として編集する。
-暖色のサイドキーで明暗面を作る。ローキー露出で正面フィルを使わず、非照明側は黒に近づけてよい。寒色は背景とリムだけに残し、ごく微かなボリュームダストを加える。汚れた灰色肌や強調したしわは禁止。
+$xxg-portrait-rebuild-light でこのポートレートを L9 + S1 + P3 + T3 + A5 として編集する。
+暖色のサイドキーで選択した面を照らし、ローキー露出では正面フィルを使わない。寒色は背景とリムだけに残し、光源方向に沿うごく薄いヘイズを加える。照明された肌は連続して清潔に保ち、立体感は光だけで作る。
 ```
 
 ### ゴールデンアワーの逆光
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + T2 + A4 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + P2 + T2 + A4 として編集する。
 側面後方からの暖かな夕日で髪と肩を縁取る。夕日のハイライト基準で露出し、正面フィルは使わない。顔の非照明側を自然な部分シルエットまで落とし、照明された輪郭には軽いブルームを許容する。背景にも同方向の斜めの暖光と長い影を生じさせる。
 ```
 
 ### サイバーパンク・ネオン
 
 ```text
-$xxg-portrait-rebuild-light でこの夜景ポートレートを L11 + S1 + T4 + A3 として編集する。
+$xxg-portrait-rebuild-light でこの夜景ポートレートを L11 + S1 + P6 + T4 + A3 として編集する。
 シアンのリムライトとマゼンタのキーライトの方向を明確に分け、顔の中央には自然な肌色領域を残す。ボケは背景のピント外領域だけに置き、目や肌には重ねない。
 ```
 
 ### 人物全体の黒い逆光シルエット
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + T2 + A6 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + P0 + T2 + A6 として編集する。
 有効な主光を人物の後方に置き、明るい背景を基準に露出する。正面・側面のフィル、キャッチライト、人物内部の照明をすべてなくし、顔、肌、髪、衣服、身体内部を連続した清潔な黒いシルエットにする。元の外輪郭、頭身比、姿勢、カメラ視点、構図は維持する。
 ```
 
 ### 柔らかな窓光と窓影
 
 ```text
-$xxg-portrait-rebuild-light でこの室内ポートレートを L2 + S1 + T1 + A1 として編集する。
+$xxg-portrait-rebuild-light でこの室内ポートレートを L2 + S1 + P2 + T1 + A1 として編集する。
 左前方上部からの柔らかな窓光で、左から右へ広く緩やかな減衰を作る。弱い室内フィルで影側を残し、低コントラストの窓影を人物から隣接する壁へ連続させる。貼り付けたように見せない。
 ```
 
 ### 木漏れ日の影を使うポートレート
 
 ```text
-$xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + T1 + A2 として編集する。
-広いスカイライトで人物を照らす。まばらな木漏れ日の影を顔と衣服の曲面に沿って柔らかく途切れさせ、物理的に妥当なら目や頬の一部を横切らせる。背景にも同じ方向の反応を出し、原因のない汚れた斑点は作らない。
+$xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + P2 + T1 + A2 として編集する。
+広いスカイライトで人物を照らす。まばらな木漏れ日の影を顔と衣服の曲面に沿って柔らかく途切れさせ、物理的に妥当なら目や頬の一部を横切らせる。背景にも同じ方向の反応を出し、影の色と縁の遷移をスカイライトと表面曲率に一致させる。
 ```
 
 ## 出力基準
@@ -257,7 +273,7 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + T1 + 
 - 入力写真と同じ人物を維持し、顔を美形化したり人工的に左右対称化したりしない。
 - 人物、衣服、背景が同じ光源系に従う。
 - 影の深さ、ハイライトのロールオフ、シルエットの強さは選択した露出意図に従い、すべてを見せるために逆光やローキーを平板化しない。
-- 肌は明るく健康的で清潔かつ連続し、低コントラストの写真的微細質感を持つが、粗くも斑状にもならない。
+- 元の肌色を維持し、肌は健康的で清潔かつ連続する。ハイライトは光源に限定され、部位別の微細質感はスケール、焦点、光が解像する場所だけに現れる。
 - 粒子、色ノイズ、汚れた灰色の影、局所的な過剰シャープ、強調したしわでリアリティを偽装しない。
 - 窓影、木漏れ日、ボケ、夕日のフレア、光線には妥当な光源と落下位置がある。
 - `A6` では人物内部全体を清潔な黒にし、顔、肌、髪、衣服、キャッチライトのディテールを残さない。同一性は外輪郭、比率、姿勢、フレーミングの維持で判定する。

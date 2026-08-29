@@ -1,4 +1,4 @@
 interface:
   display_name: "XXG Portrait Rebuild Light"
-  short_description: "Relight portraits with clean camera-real skin"
-  default_prompt: "Use $xxg-portrait-rebuild-light to relight this portrait with one physically coherent key, clean scale-aware skin detail, and a compact four-line English image-edit prompt."
+  short_description: "Relight portraits with clean optical skin realism"
+  default_prompt: "Use $xxg-portrait-rebuild-light V2 to choose texture-only or relight-and-skin, then rebuild this portrait with one physical key and clean scale-, focus-, and finish-aware skin."

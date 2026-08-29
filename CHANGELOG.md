@@ -2,6 +2,17 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] - 2026-08-29
+
+### Changed
+
+- Rebuilt portrait realism around separate broad tone, bounded reflection, scale/focus-aware microdetail, and optical focus hierarchy instead of dirt, darkness, grain, or random imperfections.
+- Added explicit `texture-only` and `relight-and-skin` scopes so skin recovery can preserve source lighting while relighting can produce physically meaningful exposure and shadow changes.
+- Added `P0–P6` skin-finish recipes and updated every example to select one L, S, P, T, and optional A recipe.
+- Added a six-part identity signature covering face outline, features, hairline, source complexion anchors, styling, and apparent age/demeanor.
+- Removed default wording that could provoke whole-face gloss, repeated pore overlays, gritty sharpening, dirty color variation, unintended dimming, or fake local contrast.
+- Updated English, Simplified Chinese, Japanese, and Korean documentation for the V2 prompt contract.
+
 ## [1.0.4] - 2026-08-24
 
 ### Changed

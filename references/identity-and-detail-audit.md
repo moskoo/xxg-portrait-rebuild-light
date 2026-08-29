@@ -1,96 +1,105 @@
-# Identity, Skin, and Result Validation
+# V2 Identity, Skin, Light, and Optics Validation
 
 ## Contents
 
-[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-gate) · [Skin](#skin-gate) · [Lighting](#lighting-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate) · [Decision](#final-decision)
+[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-signature-gate) · [Skin](#skin-realism-gate) · [Focus](#focus-and-detail-distribution-gate) · [Lighting](#lighting-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate)
 
 ## Evidence Record
 
-Follow [the backend contract](backend-and-clean-realism.md) for invocation and delivery status. When a result exists, inspect: source and result at full-frame normal size, same-coordinate face crops, side-by-side `200%–400%` views, and original result files for aspect-ratio checks. If dimensions differ, compare normalized positions without locally resizing either image. Uniform downscaling is not a failure.
-
-Record only the minimum evidence:
+Follow [the backend contract](backend-and-clean-realism.md). When a result exists, inspect source/result at normal full-frame size, same normalized face regions, side-by-side `200%–400%` views, and original result files for aspect ratio. Do not locally resize either image for comparison; uniform backend downscaling is acceptable.
 
 ```yaml
 source_size: [W, H]
+operation_scope: texture-only | relight-and-skin
 face_box: [x1, y1, x2, y2]
 face_top_y: y_top
 chin_y: y_chin
 face_height_px: y_chin - y_top
 face_height_ratio: face_height_px / H
-audit_regions:
-  face: [x1, y1, x2, y2]
-  hair: [x1, y1, x2, y2]
-  clothing: [x1, y1, x2, y2]
-  background: [x1, y1, x2, y2]
+recipes:
+  lighting: L0
+  skin_scale: S1
+  skin_finish: P0
+  color_temperature: T0
+  atmosphere: A0
 light:
   mode: match-source | relight
-  atmosphere_recipe: A0 | A1 | A2 | A3 | A4 | A5 | A6
   exposure_intent: source-matched | balanced | highlight-priority | shadow-priority | low-key | silhouette | high-key
   fill_policy: none | ambient-reflection | explicit-fill
-  shadow_policy: retained-detail | deep-clean | near-black | silhouette
+  shadow_policy: retained-detail | dramatic-clean | silhouette
   highlight_policy: retained | soft-rolloff | controlled-clipping
   confidence: low | medium | high
   evidence: [{type, object, observation}]
   contradictions: []
+optics:
+  focal_plane_preserved: true
+  depth_of_field_preserved: true
 ```
 
-Compute `face_height_px` by coordinate subtraction and reuse the same normalized audit regions before and after. Derive source confidence from consistent evidence: `low` uses `match-source`, `medium` permits only low-amplitude correction, and `high` permits explicit relighting.
+Compute `face_height_px` by coordinate subtraction and reuse normalized audit regions. Derive light confidence from evidence: `low` uses `match-source`, `medium` permits low-amplitude correction, and `high` permits explicit relighting.
 
 ## Strict Protection Gate
 
-Use [the edit plan](edit-plan-and-protection.md) only for a verified `strict-local` backend. Require all nine inventory tiles, item-level protection, matching counts, every frozen item in the union protection mask, and zero overlap between editable and protected masks. Run `scripts/validate_edit_plan.py`. If validation fails, continue as `best-effort` rather than refusing.
+Use [the edit plan](edit-plan-and-protection.md) only for verified `strict-local`. Require all nine inventory tiles, item-level protection, matching counts, every frozen item in the union mask, and zero editable/protected overlap. Run `scripts/validate_edit_plan.py`. On failure, continue as `best-effort` rather than refusing.
 
 ## Face-Scale Gate
 
-| Visible face height | Detail that can be evaluated |
+| Visible face height | Evaluated detail |
 | --- | --- |
-| `≥512 px` | Low-contrast pores, vellus hair, shallow lines, lip texture, and restrained sebum reflection. |
-| `256–511 px` | Restrained microtexture, lip texture, eye-area transitions, and local reflective variation. |
-| `<256 px` | Continuous tone, broad illumination, and natural reflection; microtexture is not a hard target. |
+| `≥512 px` | Fine regional pores, natural lip texture, sparse focus-resolved vellus detail, and bounded reflections. |
+| `256–511 px` | Faint regional microdetail, clean lip/eye boundaries, and local reflective variation. |
+| `<256 px` | Continuous tone, broad illumination, and natural reflection; surface microdetail is not a target. |
 
-Never demand pores the source cannot spatially resolve.
+Never demand detail the source scale cannot resolve.
 
-## Identity Gate
+## Identity Signature Gate
 
-| Region | Compare |
+Compare six source-defined groups:
+
+| Group | Compare |
 | --- | --- |
-| Eyes and brows | Eye aperture, corners, lids, iris placement, original left-right difference; brow head, arch, tail, and boundary. |
-| Nose | Bridge, alar width, tip, nostril outline, and placement. |
-| Lips | Cupid's bow, lip boundary, opening, corners, and upper-to-lower ratio. |
-| Outer contour | Cheekbone, cheek, jaw, chin, ear, and hairline. |
-| Expression | Gaze, lid tension, mouth-corner tension, and overall muscle state. |
+| Face outline | Jawline, face width, forehead/head ratio, cheek/chin contour. |
+| Feature geometry | Eye spacing/aperture/lids, brow shape, nose bridge/alae/tip, lip boundary/opening and feature size/placement. |
+| Hair signature | Hairline, parting, fringe, hair mass, braid/loose-strand layout. |
+| Skin anchors | Source-existing identifying marks and lip/eye-area structure, without requiring newly visible imperfections. |
+| Fixed styling | Makeup boundaries, glasses, earrings, accessories, and wardrobe identity. |
+| Age/expression | Apparent age, gaze, lid/mouth tension, expression, and overall demeanor. |
 
-Fail any reinterpretation of a visible boundary, opening, position, size, or feature into a more idealized version. Under A6, internal features are intentionally hidden; instead compare hair/head/ear/neck/limb outline, head-to-body ratio, pose, position, and framing. Black fill must not alter head shape, body proportions, or gesture.
+Fail any idealization, symmetry correction, boundary/size/placement change, or reconstructed identity. Under A6, internal features are intentionally hidden; compare hair/head/body outline, head-to-body ratio, pose, placement, and framing instead.
 
-## Skin Gate
+## Skin Realism Gate
 
-Evaluate only visible source regions with sufficient resolution:
+Judge broad tone before zoomed texture:
 
-| Region | Pass | Fail |
+| Signal/region | Pass | Fail |
 | --- | --- | --- |
-| Cheeks | Soft, sparse, low-contrast pore response following curvature. | Beauty smoothing, repeated pits, black-dot pores, or noise. |
-| Nose and alae | Slightly crisper pores; source blackheads may remain. | Dirtiness, exaggerated black dots, or redrawn alae. |
-| Forehead | Restrained sebum reflection and, when resolved, fine vellus hair. | Broad oily shine, plastic highlight, or uniform grain. |
-| Under-eye | Source-appropriate shallow lines and tonal transition. | New eye bags, wrinkles, or lid-shape change. |
-| Lips | Original boundary, color, and natural vertical texture. | Reshaped or enlarged lips, or a redrawn lip line. |
-| Makeup | Original makeup; only source-existing powder separation remains. | New color, heavier makeup, powder debris, or mottling. |
-| Neck/collarbone | Continuous exposed-skin tone and restrained reflection. | New exposure, patches, dark grooves, or invented texture. |
+| Face-neck color | Clean source complexion with gentle continuous transitions across ear, neck, and visible chest. | Patch-like hue/luminance changes, local whitening, or face-neck separation. |
+| Forehead/nose | Small bounded highlights that match key direction and P profile; detail appropriate to scale. | One continuous shine layer, fixed plastic highlight, or overdefined pore pattern. |
+| Cheeks/jaw | Softer diffuse response, visible tonal shape, and lower surface contrast than the nose. | Flat smoothing, equally shiny cheeks, texture overlay, or locally burned contour. |
+| Eye area | Original lids and tonal transition remain clean; no newly emphasized surface detail. | Darkened lines, invented bags/wrinkles, or changed lid geometry. |
+| Lips | Original shape/color with separate natural lip texture when resolved. | Reshaping, enlargement, or skin texture copied onto lips. |
+| Makeup | Original boundaries, color, and intensity remain. | Heavier/redesigned makeup or changed complexion. |
 
-At normal size, skin must first read clean and continuous. Only at closer inspection should low-contrast, sparse, nonrepeating texture appear. Fail color mottling, muddy gray, local whitening, face-neck discontinuity, global grain, chroma noise, or sharpening grit. Enter `prompt-handoff`; never repair locally.
+At normal size, skin must read clean, continuous, and dimensional before any microdetail is noticed. At closer view, detail must be faint, regional, nonrepeating, and optical—not a surface layer. Under A6, mark skin targets `not-applicable-by-design` and require one clean black interior.
 
-Do not fail a face `<256 px` because pores are absent. Under A6, mark skin regions `not-applicable-by-design` and instead require a continuous black interior with no color contamination, grain, gray patches, or residual facial light.
+## Focus and Detail Distribution Gate
+
+- Preserve the source focal plane and depth of field unless the user explicitly requests an optical change.
+- Highest detail belongs only on in-focus, adequately illuminated regions. Let detail reduce naturally with distance, shadow, curvature, and defocus.
+- Fail equally crisp pores across the entire face, every hair strand sharply separated, oversharpened clothing/background, artificial blur, or cutout edges.
+- In `texture-only`, any focus relocation, background change, global sharpening, or altered bokeh fails.
 
 ## Lighting Gate
 
-- Catchlight; nose, eye-socket, cheek, jaw, and neck shadows; hair; clothing; and background must agree with one source system. Fail duplicate shadows, cutout rims, or disconnected illumination.
-- Lighting may change luminance and reflection but may not move feature boundaries or reshape the face through localized darkening.
-- Shadows, highlights, and fill must follow the exposure intent. `low-key` and `silhouette` may lose internal detail; `highlight-priority` may permit controlled clipping.
-- Count dead black, discontinuity, or muddy shadow as loss only when it is unexplained under `source-matched` or `balanced` exposure.
-- A6 requires `fill_policy: none` and a black interior. Any facial feature, skin color, catchlight, lit hair strand, garment texture, or accessory shading inside is a failure.
+- In `texture-only`, preserve source highlight placement, exposure, white balance, shadow transition, subject/environment response, and atmosphere.
+- In `relight-and-skin`, catchlight; nose/eye-socket/cheek/jaw/neck shadows; hair; clothing; and background must agree with one source system.
+- Lighting may change luminance/reflection but may not move feature boundaries or sculpt the face through localized line darkening.
+- Default/ambiguous relight should preserve luminous midtones under `source-matched` or `balanced`. Dramatic shadow loss passes only when the user explicitly selected a compatible recipe.
+- A6 requires `fill_policy: none` and one black interior; any internal feature, skin color, catchlight, lit hair, garment texture, or accessory shading fails.
 
 ## Aspect-Ratio and Composition Gate
 
-Run `scripts/check_aspect_ratio.py`. Relative aspect-ratio drift of `≤5%` passes. Accept edge rounding and uniform downscaling; do not compare absolute pixel dimensions. Fail stretching, orientation change, cropping/extension, ratio drift above tolerance, or altered subject position/scale. Never resize, crop, or pad locally to force a pass.
+Run `scripts/check_aspect_ratio.py`. Relative aspect-ratio drift of `≤5%` passes. Accept edge rounding and uniform downscaling; do not compare absolute dimensions. Fail stretching, orientation change, crop/extension, ratio drift above tolerance, altered camera view, or changed subject position/scale. Never repair framing locally.
 
 ## Strict Pixel Audit
 
@@ -101,18 +110,19 @@ python3 "$XXG_SKILL_DIR/scripts/audit_pixel_regions.py" SOURCE EDITED \
   --manifest EDIT_PLAN.json --output pixel-audit.json
 ```
 
-The script must cover every `required_audit` item. Fail a missing plan, incomplete inventory/count, mask overlap, omitted audit item, or changed frozen pixel. If the result was uniformly downscaled, skip pixel differencing and use `best-effort` visual validation.
+Fail a missing plan, incomplete inventory/count, mask overlap, omitted `required_audit`, or changed frozen pixel. For uniform downscaling, skip pixel differencing and use `best-effort` visual validation.
 
 ## Target-Improvement Gate
 
-Before generation, define `acceptance_view` and `acceptance_criterion` for each required target. After generation, record `pass`, an observation, and evidence. If improvement is invisible at the specified normal view, fail even when a difference map or extreme zoom reveals changes.
+Define `acceptance_view` and `acceptance_criterion` before generation. Afterward, record `pass`, an observation, and evidence. Improvement must be visible at the specified normal view; a difference map or extreme zoom is insufficient.
 
-- Fail lighting that remains flat, contradictory, or nearly unchanged. Intentional low-key darkness, silhouette, or controlled bloom is not a defect.
-- Fail skin that remains plastic or changes only in brightness/color temperature. Microtexture may be not applicable below `256 px`.
-- For A6, skin microtexture is not applicable. Require a black interior plus the original outline, proportions, and pose; merely darkening the face, retaining interior detail, or using gray fill fails.
+- `texture-only`: source light/optics remain stable; plastic smoothness is replaced by bounded reflection and scale/focus-aware regional detail.
+- `relight-and-skin`: requested direction, exposure consequence, background response, and skin reflectance are immediately legible and coherent.
+- Fail whole-face gloss, fully dead-matte flattening, texture overlay, uniform sharpness, unintended dimming, complexion change, or identity drift.
+- A6: require a black interior plus original outline, proportions, pose, and placement.
 
-For a strict result, run `scripts/validate_result_assessment.py`. Any required target marked `fail` or `not_verifiable`, missing evidence, or omitted assessment enters `prompt-handoff`.
+For strict results, run `scripts/validate_result_assessment.py`. Any required target marked `fail` or `not_verifiable`, missing evidence, or omitted assessment enters `prompt-handoff`.
 
 ## Final Decision
 
-Any applicable failure in identity, aspect ratio/composition, frozen regions/inventory, required targets, lighting, clean realism, or A6 disqualifies the image. State `This image did not achieve the requested improvement` and return a complete compact prompt recompiled from the source. Never present or locally repair a failed image. Deliver only after every applicable gate passes.
+Any applicable failure in identity signature, light/scope, skin realism, focus distribution, framing, frozen regions, or target improvement disqualifies the image. State `This image did not achieve the requested improvement` and return a compact prompt recompiled from source. Never present or locally repair a failed image.

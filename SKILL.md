@@ -1,25 +1,34 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Relight an existing JPG, JPEG, PNG, or WebP portrait and rebuild clean photographic skin response without changing the person. Use for realistic skin recovery, plastic-skin removal, natural fill, backlight correction, soft window light or shadows, tree shadows, bokeh, golden-hour side backlight, neon, studio soft light, low-key light beams, full-black silhouettes, or Higgsfield-Relight-like image edits."
+description: "Edit an existing JPG, JPEG, PNG, or WebP portrait to rebuild physically coherent light and clean optical skin realism without changing the person. Use for plastic-skin or AI-look removal, texture-only fidelity enhancement, natural fill, backlight correction, soft window light or shadows, tree shadows, bokeh, golden-hour side backlight, neon, studio light, low-key beams, full-black silhouettes, or Higgsfield-Relight-like edits."
 ---
 
-# XXG Portrait Rebuild Light
+# XXG Portrait Rebuild Light V2
 
 ## Objective
 
-Treat the input as the same photograph, not as a reference for a replacement image. Change illumination and material response while:
+Treat the input as the same photograph, never as a reference for a replacement portrait. Improve illumination and skin response while retaining identity, facial geometry and natural asymmetry, expression, pose, camera view, source optics, framing, and subject scale.
 
-- retaining identity, natural facial asymmetry, facial geometry, expression, pose, camera view, framing, and subject scale;
-- using one physically coherent key light to drive the subject, clothing, nearby surfaces, and background;
-- rendering illuminated skin as clean and healthy, with low-contrast camera-resolved microtexture appropriate to the visible face scale.
+Build realism from three separable signals:
 
-The requested change must be visible at normal viewing size. Do not flatten backlight, low-key light, hard light, or silhouette exposure merely to keep every detail readable.
+1. clean low-frequency skin tone and broad transitions;
+2. source-driven diffuse/specular response with highlights confined to plausible light-facing areas;
+3. fine, region-specific microdetail limited by face scale, focus, and illumination.
+
+Do not manufacture realism with dirt, darkness, coarse pores, uniform grain, random color patches, or exaggerated facial lines. The result must first read as a clean photograph at normal size.
+
+## Choose the Edit Scope
+
+- **`texture-only`**: when the user asks only to remove plastic/AI skin or recover detail, force `L0 + T0 + A0`. Preserve the source lighting, highlight placement, exposure, white balance, focal plane, depth of field, and background.
+- **`relight-and-skin`**: when the user requests a lighting change or selects L/T/A, authorize the requested light response while preserving source focal plane and depth of field unless explicitly changed.
+
+Never let a texture-only request become a relight or a relight request become a simple color-temperature shift.
 
 ## Use the Host Image Editor
 
-1. Inspect the source image and read the host's native image-generation or image-editing skill.
+1. Inspect the source and read the host's native image-generation or image-editing skill.
 2. Discover the actual callable in the tool registry. In Codex, inspect `ALL_TOOLS` and prefer the exact discovered name `image_gen__imagegen`.
-3. For a local source image in Codex, use only the discovered tool and its real arguments:
+3. For a local source in Codex, use the discovered tool and its real arguments:
 
 ```js
 const result = await tools.image_gen__imagegen({
@@ -29,73 +38,83 @@ const result = await tools.image_gen__imagegen({
 generatedImage(result);
 ```
 
-Never guess `tools.image_gen` or `input_image`. A wrong member name, argument, or `TypeError` is a dispatch error: correct the call from the registered signature instead of declaring the image tool unavailable. In Claude, OpenClaw, or another host, use the equivalent native image-edit action explicitly exposed by that host.
+Never guess `tools.image_gen` or `input_image`. Correct wrong members, arguments, or `TypeError` from the registered signature and retry. In Claude, OpenClaw, or another host, use the equivalent native image-edit action explicitly exposed by that host.
 
 ## Route the Outcome
 
 | Observed state | Required action |
 | --- | --- |
-| Compatible image tool discovered | Invoke it. A small face, dense text, complex props, or a subject touching frame edges lowers detail ambition but never blocks generation. |
+| Compatible image tool discovered | Invoke it. A small face, dense text, complex props, or edge contact lowers detail ambition but never blocks generation. |
 | Correct image tool returns a real error | Report the actual error, enter `prompt-only`, and return a complete compact prompt. |
 | Discovery completes with no compatible callable | Enter `invocation-handoff` and return a complete compact prompt. |
-| Generated result is nearly unchanged, changes identity, dirties skin, or misses the lighting design | State that the result did not achieve the requested improvement, enter `prompt-handoff`, and recompile from the source image. |
+| Result is nearly unchanged, changes identity, creates artificial skin, or misses the light | State that the result did not achieve the requested improvement, enter `prompt-handoff`, and recompile from the source. |
 
-Reading a skill, inspecting an image, creating a task, or saying that generation is starting does not count as an image-tool invocation.
+Reading a skill, inspecting an image, creating a task, or announcing generation is not an image-tool invocation.
 
 ## Never Produce the Final Image Locally
 
-Do not use Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, or custom raster scripts to relight, grade, retouch, sharpen, add texture, resize, crop, extend, composite, repair, or otherwise produce the delivered image. Use them only for read-only aspect-ratio, mask, and result audits. See `requirements.txt`.
+Do not use Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, or custom raster scripts to relight, grade, retouch, sharpen, add texture, resize, crop, extend, composite, repair, or produce the delivered image. Use them only for read-only aspect-ratio, mask, and result audits. See `requirements.txt`.
 
 ## Compile the Image Prompt
 
-Read [the prompt compiler](references/prompt-recipes.md) and [the lighting recipes](references/lighting-skin-color-temperature-recipes.md). Decide internally in this order:
+Read [the V2 prompt compiler](references/prompt-recipes.md) and [the recipe library](references/lighting-skin-color-temperature-recipes.md). Decide internally as:
 
 ```text
-Key → Exposure → Fill → Shadow → Subject → Background → Atmosphere
+Scope → Key → Exposure → Fill → Shadow → Skin scale → Skin finish → Background → Atmosphere
 ```
 
 Select exactly:
 
 ```text
-one L + one S + one T + zero or one A
+one L + one S + one P + one T + zero or one A
 ```
 
-Use one key-light system. Any atmosphere must inherit that key's direction, color logic, and exposure. `A6` is the sole override: force silhouette exposure, place the effective source behind the subject, remove fill/catchlights/internal illumination, render the entire subject interior black, use L/T only for the backlight and background, and suppress S.
+Use one key-light system. Atmosphere and skin reflections must inherit its direction, size, falloff, and color. `A6` is the sole override: force silhouette exposure, remove all subject fill/catchlights/internal illumination, use L/T only for the rear source and background, and suppress both S and P.
 
-Send only four lines to the image model:
+Send only four lines:
 
 ```text
-EDIT: identity and structural invariants.
-LIGHT: key, exposure, shadow behavior, background response, color temperature, and optional atmosphere.
-SKIN: one scale-appropriate S target; replace with black interior for A6.
-AVOID: the four highest-risk failure modes for this image.
+EDIT: scope, identity/structure lock, and source-optics lock.
+LIGHT: one key, exposure consequence, shadow transition, background response, color, and optional atmosphere.
+SKIN: one scale-aware S behavior plus one source-consistent P finish.
+AVOID: only the three or four failures most likely for this source.
 ```
 
-- Target `40–90` English words; allow up to `120` for dense text or product scenes.
-- State the identity lock once and name no more than three protected object categories.
-- Describe visible photographic outcomes; omit recipe codes, audits, confidence, backend notes, and reasoning.
-- Do not stack synonyms or use “change nothing,” “minimal pixel change,” or equivalent language that suppresses the edit.
-- On retry, replace the failed line instead of appending more constraints.
+- Target `45–95` English words; allow up to `125` for dense text or product scenes.
+- State identity once. Treat the source itself as the identity card; do not invent a new age, personality, beauty description, lens, or aperture.
+- Use positive, observable photographic behavior before negative constraints. Omit recipe codes, audits, confidence, backend notes, and reasoning.
+- Keep default prompts free of realism-by-dirt terms: freckles, blemishes, blackheads, rough skin, color irregularity, film grain, gritty texture, under-eye lines, and high contrast. Preserve source-specific marks without naming or amplifying them.
+- Use `deep`, `near-black`, or `hard contrast` only when the user explicitly selects backlight, hard light, low-key, neon, or silhouette behavior.
+- On retry, replace the failed line instead of appending more instructions.
 
-Every handoff must use the same four-line structure with no placeholders.
+Every handoff must use this structure with no placeholders.
 
-## Edit Envelope
+## Preserve the Identity Signature
 
-- **Structural invariants:** identity; face/head shape and ratio; feature position and size; natural asymmetry; expression; gaze; hairline; pose; camera perspective; composition; and subject-to-frame scale. Never beautify, idealize, or symmetrize.
-- **Authorized appearance changes:** source-consistent luminance, reflection, cast shadow, color temperature, and requested atmosphere across skin, hair, clothing, and nearby background surfaces.
-- **A6 exception:** internal facial detail is intentionally hidden. Judge preservation from the hair/head/body outline, head-to-body ratio, pose, position, and framing.
+Keep six source-defined groups stable: face outline/proportions; feature spacing, shape, and size; hairline, parting, and hair mass; source-identifying skin anchors; makeup/accessories; and apparent age/expression. Do not describe these groups in detail to the image model unless a real failure requires a shorter identity retry. Detailed identity checks belong in validation, not the generation prompt.
 
-## Photographic Priors
+Under A6, internal features are intentionally hidden. Judge identity from hair/head/body outline, head-to-body ratio, pose, position, and framing.
 
-- Choose S0/S1/S2 by visible face height. Skin must read clean and continuous at normal size; low-contrast, nonrepeating microtexture should appear only on closer inspection. Preserve blackheads, moles, powder separation, and similar details only when they already exist in the source.
-- Add fill only when the exposure intent requires readable shadows. Low-key, highlight-priority, and silhouette treatments may use no fill.
-- Derive shadow hardness from apparent source size and distance. Subject, clothing, nearby surfaces, and background must share direction, falloff, and reflected color.
-- Window or tree shadows must cross subject curvature and nearby surfaces; bokeh belongs only in optically defocused regions; light rays require a directional source and visible medium; neon needs a clear primary and secondary color source.
-- Under A6, suspend visible skin goals. Face, skin, hair, clothing, accessories, and body interior must form one clean black mass with no facial light, skin color, catchlight, hair strands, or garment texture. Permit only a very narrow source-consistent rim that does not enter the silhouette.
+## Apply Optical Skin Realism
+
+- Keep overall skin color clean and continuous across face, ear, neck, and visible upper chest. Local transitions should be gentle and source-consistent, never patch-like.
+- Use a diffuse base with small bounded specular highlights only on planes facing the selected key. Avoid a whole-face gloss layer and avoid removing all highlights.
+- Vary surface detail by region: cheek pores softer, nose pores slightly clearer, lip texture separate, eye-area structure undisturbed. Do not tile one pore pattern across the face.
+- Match detail to the source focus plane, depth of field, face size, and illumination. Never sharpen the whole face, every hair, clothing, and background equally.
+- Preserve source-existing marks as identity anchors, but do not list or generate new imperfections by default.
+- Preserve source skin tone; do not use `fair`, `whiter`, or beauty-grade language unless the user explicitly requests a complexion change.
+
+## Apply Physical Light Without Unwanted Darkness
+
+- Default unspecified edits to `source-matched` or `balanced`, with clean midtones and readable but directional shadow separation.
+- Add fill only when the selected exposure requires information to remain readable. Do not flatten intended backlight, hard light, low-key, or silhouette.
+- Derive shadow edge from apparent source size and distance. Carry direction, falloff, cast shadows, and reflected color across subject, clothing, nearby surfaces, and background.
+- Keep window/tree shadows continuous across curvature and adjacent surfaces; keep bokeh only in optically defocused regions; require a visible or strongly inferred source for rays; give neon a clear primary and secondary source.
+- Under A6, render the complete subject interior as one clean black mass. Permit only a narrow source-consistent rim that does not enter the silhouette.
 
 ## Preserve the Frame
 
-Retain orientation, aspect ratio, composition, and subject-to-frame scale. A backend may downscale uniformly; exact pixel dimensions are not required. If a local result file exists, perform this read-only check:
+Retain orientation, aspect ratio, composition, focal plane, depth of field, and subject-to-frame scale. A backend may downscale uniformly; exact pixel dimensions are not required. If a local result exists, run the read-only check:
 
 ```bash
 python3 "$XXG_SKILL_DIR/scripts/check_aspect_ratio.py" SOURCE_IMAGE EDITED_IMAGE
@@ -105,15 +124,15 @@ Accept relative aspect-ratio drift of `≤5%`. Never resize, crop, pad, or exten
 
 ## Validate the Result
 
-After generation, read [the identity and detail audit](references/identity-and-detail-audit.md). At normal viewing size, verify:
+After generation, read [the V2 identity and detail audit](references/identity-and-detail-audit.md). At normal size first, verify:
 
-1. the requested key, exposure, and atmosphere are immediately legible and physically coherent;
-2. identity, geometry, pose, and composition remain stable; for A6, inspect outline, proportions, and pose;
-3. illuminated skin is clean and photographic, without added grain, mottling, or fake sculpting; for A6, inspect the continuous black interior;
-4. subject and background share the same light logic, with plausible placement for window/tree shadows, bokeh, neon, flare, or light rays;
-5. orientation, aspect ratio, and subject scale remain stable; uniform downscaling is acceptable.
+1. the requested lighting change—or exact source-light preservation in `texture-only`—is immediately clear;
+2. identity signature, pose, source optics, framing, and subject scale remain stable;
+3. skin reads clean before microdetail becomes visible, with bounded highlights and no uniform gloss or texture overlay;
+4. detail density follows facial region, focus, scale, and illumination rather than appearing equally sharp everywhere;
+5. subject and environment share one physical light system; A6 remains a complete black interior.
 
-If the result is nearly unchanged, strengthen the single key and one observable outcome. If skin becomes dirty, replace the SKIN line with `clean continuous skin tone with low-contrast reflective microtexture`. Never present a failed image as the final result.
+If a result is nearly unchanged, strengthen one observable target. If skin becomes artificial, replace SKIN with `clean continuous source skin tone; bounded source-shaped highlights; faint region-specific microdetail only where focus and light resolve it`. Never present a failed image as final.
 
 ## Load References Only When Needed
 
