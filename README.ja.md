@@ -8,13 +8,13 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.0.0-black?style=flat-square" alt="Version 2.0.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.1.0-black?style=flat-square" alt="Version 2.1.0"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | 日本語 | [한국어](README.ko.md)
 
 
-`xxg-portrait-rebuild-light` は、既存のポートレート写真を対象とする image edit Skill です。V2 は、光、肌の広い色調、局所反射、スケールと焦点に応じた微細質感、肌の写真的仕上がりを分離して制御し、汚れ、暗さ、粒子、ランダムな欠点に頼らずリアリティを作ります。
+`xxg-portrait-rebuild-light` は既存のポートレート写真を対象とする image edit Skill です。V2.1 は、物理光、露出配置、色調・スタイル、撮影機器の応答、肌の広域色調、局所反射、スケールと焦点に応じた微細質感を分離して制御します。
 
 人物を描き直すのではなく、光を変えることを重視します。同一人物であること、顔の構造と比率、自然なわずかな左右差、表情、ポーズ、カメラ視点、構図を維持し、プラスチック肌、粒状肌、汚れた色むら、しわを強調して作る偽の立体感を避けます。
 
@@ -23,6 +23,9 @@
 - `texture-only` により、元の光、色、焦点、被写界深度、シーン内容を変えずに肌の忠実度だけを回復。
 - 清潔な広域色調、元の光源に沿う限定的なハイライト、部位別の微細質感を分離してプラスチック感を解消。
 - 元画像一致、サテンマット、柔らかな昼光、エディトリアル、直射フラッシュ、ビューティー、環境光の `P0–P6` を搭載。
+- ハイライト余裕、顔の中間調、方向性のある影、黒レベルを定義する `E0–E7` 露出レシピ。
+- フルフレーム、中判、35mm、CCD、コンパクト直射フラッシュ、スマートフォン、インスタント、使い捨てカメラ向けの `G0–G8` 色調と `D0–D8` 撮影応答。
+- 撮影機器の応答と光学系を分離し、明示的な optical-restyle がない限り視点、遠近、クロップ、焦点面、被写界深度を維持。
 - プラスチックのような平滑さ、過度な美肌処理、蝋人形のような質感を修正。
 - 元の唇のしわ、目元の階調、控えめな皮脂反射、顔の表示サイズに合う微細質感を保持。
 - 弱い逆光、室内の不自然に分断された窓光、平板な光、意図しない黒つぶれ、光源のないハイライトを修正。
@@ -45,30 +48,31 @@
 Skill は最初に内部でディレクター式の判断を行います。
 
 ```text
-Scope 作用範囲 → Key キーライト → Exposure 露出意図 → Fill フィル → Shadow 影 → Skin scale 肌スケール → Skin finish 肌仕上げ → Background 背景 → Atmosphere 雰囲気
+Scope 作用範囲 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A
 ```
 
-画像モデルへ渡すプロンプトは、英語 45〜95 語の 4 行に圧縮します。
+画像モデルへは英語 4 行を送り、色調または機器効果を求める場合だけ `RENDER` 行を追加します。通常は 55〜110 語です。
 
 ```text
-EDIT: Choose texture-only or relight-and-skin; retain source identity, geometry, expression, pose, focal plane, depth of field, camera view, and composition.
-LIGHT: One key with explicit direction, exposure consequence, shadow transition, background response, color, and at most one source-consistent atmosphere.
-SKIN: One scale-aware S behavior plus one source-consistent P finish, with continuous tone and bounded highlights.
-AVOID: Identity drift, whole-face gloss, repeated texture, or structural scene redraw.
+EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
+LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
+RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
+SKIN: One scale-aware S plus one light-consistent P finish.
+AVOID: Only two or three source-specific failures.
 ```
 
 同一性監査、物体一覧、重複するネガティブ語、複数の撮影スタイルを一つのプロンプトに詰め込みません。制約同士が相殺されたり、元画像がそのまま複製されたりするのを防ぐためです。
 
-肌だけを直す場合、V2 は `L0 + T0 + A0` を強制し、元のハイライト位置、露出、ホワイトバランス、焦点、被写界深度を維持します。再照明では `source-matched`、`balanced`、`highlight-priority`、`shadow-priority`、`low-key`、`silhouette`、`high-key` から露出意図を選択します。指定がなければ清潔な元画像一致または均衡露出を使い、劇的な暗さは明示された場合だけ適用します。
+肌だけを直す場合、V2.1 は `L0 + E0 + T0 + G0 + D0 + A0` を強制します。色調補正は E/T/G、機器模倣は G/D と必要な E、再照明は L/E/T/A だけを変更します。`optical-restyle` が明示されない限り、視点、遠近、クロップ、焦点面、被写界深度を維持します。
 
-`A6` は強制上書きです。選択すると必ずシルエット露出へ切り替え、有効な主光を人物の後方へ移し、すべてのフィルとキャッチライトをなくして人物内部全体を黒にします。L と T は逆光と背景だけを制御し、S と P は無効になります。
+`A6` は E6 シルエット露出を強制し、有効な主光を人物の後方へ移し、フィルとキャッチライトをなくして人物内部を黒にします。L/T と G/D は逆光と背景だけに作用し、S/P は無効です。
 
 ## レシピ
 
 一度に選ぶのは次の組み合わせだけです。
 
 ```text
-L ライティングを 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1 つ + T 色温度を 1 つ + A 雰囲気を 0 または 1 つ
+L 光を 1 つ + E 露出を 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1 つ + T 光色を 1 つ + G 色調を 1 つ + D 撮影応答を 1 つ + A 雰囲気を 0 または 1 つ
 ```
 
 ### ライティング L
@@ -88,6 +92,19 @@ L ライティングを 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1
 | `L10` | ゴールデンアワーの夕日による側面逆光 |
 | `L11` | サイバーパンクのシアン／マゼンタ 2 色ネオン |
 | `L12` | 清潔で均一な商業用ソフトライト |
+
+### 露出 E
+
+| コード | 用途 |
+| --- | --- |
+| `E0` | 元画像のハイライト、中間調、影、黒レベルを維持 |
+| `E1` | 明瞭な中間調と方向性のある影を持つ自然な均衡露出 |
+| `E2` | 明るい光源やリムを保護し、非照明面は現実の反射光に従う |
+| `E3` | 明るい光源を制御しながら、つぶれた影だけを回復 |
+| `E4` | 白の質感と穏やかな顔の立体感を保つハイキー |
+| `E5` | 選択した照明面だけを読める中間調に置くローキー |
+| `E6` | 全黒シルエット露出。`A6` 専用 |
+| `E7` | 直射フラッシュの人物露出と急速な環境減衰 |
 
 ### 肌スケール S
 
@@ -118,6 +135,37 @@ L ライティングを 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1
 | `T2` | 健康的で中立な肌色領域を残すゴールデン暖色光 |
 | `T3` | 暖色キーライトと寒色の背景環境光 |
 | `T4` | シアン／マゼンタのネオン関係 |
+| `T5` | 全画面を青くせず、曇天またはブルーアワーの寒色中性光 |
+| `T6` | 距離に応じて色が減衰する暖色タングステン実景灯 |
+| `T7` | 肌と中性物を守る昼光・実景灯の混合光バランス |
+
+### 色調・スタイル G
+
+| コード | 用途 |
+| --- | --- |
+| `G0` | 元画像の色とカーブを維持 |
+| `G1` | 中性的なエディトリアル色と控えめな S カーブ |
+| `G2` | 正確な白と明るい中間調の清潔な商業色 |
+| `G3` | 環境彩度を軽く抑え、肌の彩度を守るドキュメンタリー色 |
+| `G4` | 照明された肌を暖かく、背景と影の寒色を限定 |
+| `G5` | パステル調の中間調と柔らかく圧縮したハイライト |
+| `G6` | 肌、髪、衣服、背景を分離する階調モノクロ |
+| `G7` | 控えめな 1970 年代プリント。粒子は明示時のみ |
+| `G8` | 清潔な 1990s/Y2K 直射フラッシュ色 |
+
+### 撮影応答 D
+
+| コード | 用途 |
+| --- | --- |
+| `D0` | 元の撮影応答を維持 |
+| `D1` | 現代フルフレーム：清潔なディテールと滑らかなハイライト |
+| `D2` | デジタル中判：滑らかな階調、豊かな色分離、控えめなシャープ処理 |
+| `D3` | 35mm カラーネガ：穏やかなハイライト圧縮と柔らかな微小コントラスト |
+| `D4` | CCD／デジカメ：直接的で明瞭な階調と限られたハイライト余裕 |
+| `D5` | コンパクト直射フラッシュ。`L6 + E7` と組み合わせる |
+| `D6` | スマートフォン計算写真：HDR ハローや硬い輪郭のない広いレンジ |
+| `D7` | インスタント写真の色調。枠と粒子は明示時のみ |
+| `D8` | 使い捨てカメラ応答。露出欠陥と粒子は明示時のみ |
 
 ### 雰囲気 A
 
@@ -218,52 +266,66 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 
 ## 使用例
 
+### 色調と露出の補正
+
+```text
+$xxg-portrait-rebuild-light でこのポートレートを L0 + E1 + S1 + P0 + T7 + G1 + D0 + A0 として編集する。
+元の光源方向を維持し、明部の形を守り、顔の中間調を明瞭にし、つぶれた影だけを開いて安定した黒レベルを保つ。肌色、白い基準物、衣服色、視点、焦点面、被写界深度、シーン内容を維持して不要な色かぶりを補正する。
+```
+
+### スマートフォン計算写真の応答
+
+```text
+$xxg-portrait-rebuild-light でこのポートレートを L0 + E1 + S1 + P1 + T0 + G0 + D6 + A0 として編集する。
+元の物理光と光学系を維持する。広い実用ダイナミックレンジ、自然な肌色、控えめな局所トーンマッピングとエッジ処理を使い、クロップ、焦点面、被写界深度を変えない。
+```
+
 ### クラシックなファッション誌風
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L8 + S2 + P3 + T1 + A0 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L8 + E1 + S2 + P3 + T1 + G1 + D2 + A0 として編集する。
 前方斜め上の大型ソフトライトで控えめなレンブラント光を作り、弱いフィルで眼窩を残す。片側の頬は深く柔らかな影にし、光源と一致するキャッチライトを一つだけ入れる。肌は清潔で健康的な低コントラストの写真的微細質感にする。
 ```
 
 ### 映画的なローキーの寒暖
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L9 + S1 + P3 + T3 + A5 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L9 + E5 + S1 + P3 + T3 + G4 + D1 + A5 として編集する。
 暖色のサイドキーで選択した面を照らし、ローキー露出では正面フィルを使わない。寒色は背景とリムだけに残し、光源方向に沿うごく薄いヘイズを加える。照明された肌は連続して清潔に保ち、立体感は光だけで作る。
 ```
 
 ### ゴールデンアワーの逆光
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + P2 + T2 + A4 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L10 + E2 + S1 + P2 + T2 + G1 + D1 + A4 として編集する。
 側面後方からの暖かな夕日で髪と肩を縁取る。夕日のハイライト基準で露出し、正面フィルは使わない。顔の非照明側を自然な部分シルエットまで落とし、照明された輪郭には軽いブルームを許容する。背景にも同方向の斜めの暖光と長い影を生じさせる。
 ```
 
 ### サイバーパンク・ネオン
 
 ```text
-$xxg-portrait-rebuild-light でこの夜景ポートレートを L11 + S1 + P6 + T4 + A3 として編集する。
+$xxg-portrait-rebuild-light でこの夜景ポートレートを L11 + E5 + S1 + P6 + T4 + G4 + D1 + A3 として編集する。
 シアンのリムライトとマゼンタのキーライトの方向を明確に分け、顔の中央には自然な肌色領域を残す。ボケは背景のピント外領域だけに置き、目や肌には重ねない。
 ```
 
 ### 人物全体の黒い逆光シルエット
 
 ```text
-$xxg-portrait-rebuild-light でこのポートレートを L10 + S1 + P0 + T2 + A6 として編集する。
+$xxg-portrait-rebuild-light でこのポートレートを L10 + E6 + S1 + P0 + T2 + G0 + D0 + A6 として編集する。
 有効な主光を人物の後方に置き、明るい背景を基準に露出する。正面・側面のフィル、キャッチライト、人物内部の照明をすべてなくし、顔、肌、髪、衣服、身体内部を連続した清潔な黒いシルエットにする。元の外輪郭、頭身比、姿勢、カメラ視点、構図は維持する。
 ```
 
 ### 柔らかな窓光と窓影
 
 ```text
-$xxg-portrait-rebuild-light でこの室内ポートレートを L2 + S1 + P2 + T1 + A1 として編集する。
+$xxg-portrait-rebuild-light でこの室内ポートレートを L2 + E1 + S1 + P2 + T1 + G0 + D0 + A1 として編集する。
 左前方上部からの柔らかな窓光で、左から右へ広く緩やかな減衰を作る。弱い室内フィルで影側を残し、低コントラストの窓影を人物から隣接する壁へ連続させる。貼り付けたように見せない。
 ```
 
 ### 木漏れ日の影を使うポートレート
 
 ```text
-$xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + P2 + T1 + A2 として編集する。
+$xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + E1 + S1 + P2 + T1 + G0 + D0 + A2 として編集する。
 広いスカイライトで人物を照らす。まばらな木漏れ日の影を顔と衣服の曲面に沿って柔らかく途切れさせ、物理的に妥当なら目や頬の一部を横切らせる。背景にも同じ方向の反応を出し、影の色と縁の遷移をスカイライトと表面曲率に一致させる。
 ```
 
@@ -273,6 +335,7 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + P2 + 
 - 入力写真と同じ人物を維持し、顔を美形化したり人工的に左右対称化したりしない。
 - 人物、衣服、背景が同じ光源系に従う。
 - 影の深さ、ハイライトのロールオフ、シルエットの強さは選択した露出意図に従い、すべてを見せるために逆光やローキーを平板化しない。
+- E はハイライト余裕、人物の中間調、方向性のある影、黒レベルを明確に制御し、G/D は光学系を無断変更せず一つの色調と撮影応答を作る。
 - 元の肌色を維持し、肌は健康的で清潔かつ連続する。ハイライトは光源に限定され、部位別の微細質感はスケール、焦点、光が解像する場所だけに現れる。
 - 粒子、色ノイズ、汚れた灰色の影、局所的な過剰シャープ、強調したしわでリアリティを偽装しない。
 - 窓影、木漏れ日、ボケ、夕日のフレア、光線には妥当な光源と落下位置がある。
@@ -284,6 +347,7 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + S1 + P2 + 
 - [Skill の主要ルール](SKILL.md)
 - [簡潔プロンプトコンパイラ](references/prompt-recipes.md)
 - [光・肌・色温度・雰囲気レシピ](references/lighting-skin-color-temperature-recipes.md)
+- [色調・露出・スタイル・機器・光学レシピ](references/tone-exposure-style-device-recipes.md)
 - [バックエンド機能の説明](references/backend-and-clean-realism.md)
 - [Python 依存関係](requirements.txt)
 - [コントリビューションガイド](CONTRIBUTING.md)

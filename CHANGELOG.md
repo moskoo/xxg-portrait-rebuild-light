@@ -2,6 +2,21 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
+## [2.1.0] - 2026-09-07
+
+### Added
+
+- Added `E0–E7` exposure recipes with explicit highlight, midtone, shadow, and black-point placement.
+- Added `G0–G8` color/style grades and `D0–D8` capture-response recipes for modern full-frame, medium-format, 35mm negative, CCD compact, point-and-shoot flash, smartphone computational, instant-film, and disposable-camera looks.
+- Added `tone-and-exposure`, `capture-style`, and explicit `optical-restyle` scope boundaries.
+- Added source-safe production prompts for tonal correction, medium-format editorial, 35mm documentary, point-and-shoot flash, and smartphone available-light response.
+
+### Changed
+
+- Camera and film labels now compile into observable tonal steps, highlight roll-off, color separation, microcontrast, sharpening, and dynamic-range behavior instead of acting as unsupported style tokens.
+- Capture-style edits preserve viewpoint, perspective, crop, focal plane, and depth of field unless an optical restyle is explicitly requested.
+- Updated all four README languages, validation gates, strict edit-plan fields, and handoff rules for L/E/S/P/T/G/D/A selection.
+
 ## [2.0.0] - 2026-08-29
 
 ### Changed

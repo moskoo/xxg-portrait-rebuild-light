@@ -1,4 +1,4 @@
-# V2 Backend Capability and Clean Realism
+# V2.1 Backend Capability and Clean Realism
 
 ## Delivery Modes
 
@@ -44,7 +44,10 @@ Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are no
 | Condition | Policy |
 | --- | --- |
 | `texture-only` | Preserve source light, highlight map, color, optics, and environment; authorize only skin reflectance/microdetail. |
-| `relight-and-skin` | Authorize selected lighting and scene-wide response; preserve source identity, focal plane, DOF, framing, and object structure. |
+| `tone-and-exposure` | Preserve physical light direction and source optics; authorize only selected E/T/G behavior. |
+| `relight-and-skin` | Authorize selected L/E/T/A and scene-wide response; preserve source identity, focal plane, DOF, framing, and object structure. |
+| `capture-style` | Authorize selected G/D and logically required E; preserve viewpoint, crop, focal plane, DOF, identity, and scene structure. |
+| `optical-restyle` | Authorize only explicitly requested perspective/focal/DOF change; preserve facial feature geometry and all unrelated content. |
 | Verified `strict-local` | Execute the validated local edit plan; deliver a strict final only after every gate passes. |
 | `full-frame-generative` | Generate the full frame as best effort; keep one clear visible target and reduce redraw/detail ambition. |
 | Face `<256 px` | Disable added microdetail; retain tone/reflection and the full scene-level lighting target. |
@@ -53,7 +56,7 @@ Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are no
 
 For full-frame edits, separate `structural_invariants`, `authorized_appearance_changes`, and one `minimum_visible_improvement` observable at normal size. An almost unchanged result cannot pass as restrained processing.
 
-## V2 Clean Optical Realism
+## V2.1 Clean Optical Realism
 
 | Signal | Pass | Fail |
 | --- | --- | --- |
@@ -72,9 +75,18 @@ Treat source marks as identity anchors without naming or amplifying them in the 
 - Use dramatic darkness only for an explicitly selected backlight, hard-light, low-key, neon, or silhouette recipe.
 - If a model becomes artificial, rewrite the SKIN line from scratch; never append more defect terms.
 
+## Tone and Capture Boundaries
+
+- Keep physical light (L/T), exposure placement (E), color/look (G), and capture response (D) separate. A grade or camera name never creates another light source.
+- Default to E0/G0/D0. Compile a nonzero recipe only from an explicit tone, style, era, device, film, camera, or phone request.
+- Exposure prompts must place highlight headroom, subject midtones, directional shadows, and black point. Avoid whole-frame highlight-plus-shadow recovery.
+- Compile device labels into tonal steps, highlight roll-off, color separation, microcontrast, sharpening, and dynamic range; never promise exact manufacturer color science.
+- A capture-style edit preserves source viewpoint, perspective, crop, focal plane, and DOF. Change optics only under explicit `optical-restyle`.
+- Grain, vignette, borders, date stamps, color casts, and exposure defects are opt-in frame-level artifacts, never skin-detail mechanisms.
+
 ## Lighting Boundaries
 
-- Set `exposure_intent` before fill, shadow, and highlight policy. For unspecified relight, default to `source-matched` or `balanced` with luminous midtones.
+- Select E before fill, shadow, and highlight policy. Use E0 for preservation and E1 for unspecified natural relighting.
 - Derive highlight/shadow edge from apparent source size. Never add a second nose shadow/catchlight or create volume by darkening facial lines.
 - Preserve bright sources and rims under backlight. Use dramatic shadow loss only when the selected exposure requires it.
 - Indoor window light must explain subject, clothing, wall/furniture, reflective objects, and room falloff together. With insufficient evidence, use `match-source`.
@@ -90,5 +102,7 @@ Off-camera window confidence: `high` requires a visible window or at least three
 | No compatible tool / real tool error | Use `invocation-handoff` / `prompt-only`, respectively. |
 | Nearly unchanged, target missed, identity/protection/framing failed | Use `prompt-handoff`; never repair locally. |
 | Plastic smoothness remains | Use scale-aware S plus P0/P1; specify bounded highlights and focus-aware regional detail. |
-| Skin becomes artificial or the image dims unintentionally | Remove realism-by-defect/darkness terms; reset to clean source tone, bounded reflection, and `source-matched`/`balanced` exposure. |
+| Skin becomes artificial or the image dims unintentionally | Remove realism-by-defect/darkness terms; reset to clean source tone, bounded reflection, and E0/E1 exposure. |
+| Tone becomes flat or globally tinted | Replace E/G with explicit tonal-zone placement, neutral references, skin-hue protection, saturation relationship, and one curve. |
+| Device style is absent or changes optics | Replace the name with D capture behavior and restore source viewpoint/crop/focus/DOF. |
 | A6 retains interior detail or gray fill | Remove S/P, fill, catchlights, and subject lighting; require one continuous black interior. |

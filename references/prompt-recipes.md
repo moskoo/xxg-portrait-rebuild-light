@@ -1,106 +1,154 @@
-# V2 Compact Prompt Compiler
+# V2.1 Compact Prompt Compiler
 
 ## Contents
 
-[Contract](#output-contract) · [Scope](#scope-first) · [Outcomes](#observable-outcomes) · [Production prompts](#six-production-prompts) · [Skin clauses](#skin-clauses) · [Safe wording](#priming-safe-wording) · [Failure rewrites](#replace-one-failed-line)
+[Contract](#output-contract) · [Scope](#scope-first) · [Compilation](#layer-compilation) · [Outcomes](#observable-outcomes) · [Production prompts](#production-prompts) · [Skin clauses](#skin-clauses) · [Safe wording](#priming-safe-wording) · [Failure rewrites](#replace-one-failed-layer)
 
 ## Output Contract
 
-Send one structural lock, one optical/light system, one scale-aware skin behavior, one skin-finish profile, one color relationship, and at most one atmosphere. Target `45–95` English words; allow up to `125` only for dense text or product scenes.
+Describe one final photograph, not a conversation about editing. Use four lines when source color/capture remain unchanged; add RENDER only for a requested grade or device response.
 
 ```text
-EDIT: {texture-only or relight-and-skin}; retain source identity, geometry, expression, pose, focal plane, depth of field, camera view, and composition.
-LIGHT: {L + exposure consequence + shadow transition + background response} {A} {T}.
-SKIN: {S + P}; keep tone continuous and specular highlights bounded by the key.
-AVOID: identity drift, whole-face gloss, repeated texture, or structural scene redraw.
+EDIT: {scope}; retain source identity, geometry, expression, pose, camera view, focal plane, depth of field, framing, and every unauthorized axis.
+LIGHT: {L + E: source, direction, landing area, highlight/midtone/shadow/black behavior, environment response} {T} {optional A}.
+RENDER: {G palette/curve + D capture response}; preserve source perspective and optics. [Omit for G0 + D0.]
+SKIN: {S + P}; continuous source complexion, bounded key-shaped reflection, and regional detail limited by scale/focus/light.
+AVOID: {only two or three source-specific failures}.
 ```
 
-Compile by these rules:
-
-1. Select one L, one S, one P, one T, and zero or one A from [the V2 recipe library](lighting-skin-color-temperature-recipes.md); copy behavior, never codes.
-2. State direction, apparent source size, landing area, exposure consequence, shadow transition, and environmental response as one visible result.
-3. Lock identity once. Treat the attached source as the identity description; do not restate perceived age, attractiveness, facial style, lens, or aperture.
-4. Make the SKIN line describe three separable signals: clean broad tone, bounded source-shaped reflection, and focus-aware regional microdetail.
-5. Use at most four source-specific avoid clauses. On retry, replace the failed line rather than appending a corrective paragraph.
+- Target `55–110` English words. Combined relight plus capture-style prompts may reach `135`; never exceed it.
+- Select `one L + one E + one S + one P + one T + one G + one D + zero or one A` and copy behavior, never codes.
+- State identity once. The attached source is the identity card; do not redescribe attractiveness, age, facial style, or imagined camera settings.
+- Put positive, visible behavior first. Keep AVOID short and source-specific.
+- On retry, replace the failed layer. Never append a second lighting setup, color look, device, or defect list.
 
 ### A6 Override
 
-For A6, force silhouette exposure. Remove all subject-facing illumination, fill, catchlights, and internal highlights from L. Use L/T only for the rear source and background. Omit S/P and write: `The entire subject interior is one continuous black silhouette; retain only the original outline, proportions, pose, and placement.`
+For A6, force E6. Remove subject-facing light, fill, catchlights, and internal highlights. Use L/T only for the rear source/background, suppress S/P, and write: `The entire subject interior is one continuous black silhouette; retain only the original outline, proportions, pose, and placement.` G/D may affect only the background.
 
 ## Scope First
 
 | User intent | Required compilation |
 | --- | --- |
-| Skin realism, plastic-skin removal, texture recovery only | `texture-only`; force `L0 + T0 + A0`, preserve highlight placement/exposure/white balance/focus/DOF, and change only skin response. |
-| Explicit relight or L/T/A selection | `relight-and-skin`; authorize the selected light while preserving identity, source focal plane, and depth of field. |
-| Ambiguous request | Prefer `texture-only` when the complaint is skin; prefer `relight-and-skin` when the complaint is illumination. |
+| Skin realism only | `texture-only`; force `L0 + E0 + T0 + G0 + D0 + A0`; preserve source light, color, exposure, capture, focus, and scene. |
+| Brightness, dynamic range, white balance, or grade only | `tone-and-exposure`; preserve L and source geometry/optics; change only requested E/T/G axes. |
+| New lighting | `relight-and-skin`; apply L/E/T/A across subject and environment; preserve geometry and source optics. |
+| Camera, film, phone, CCD, or era feel | `capture-style`; change G/D and only the E response the capture logically requires; preserve viewpoint/crop/focus/DOF. |
+| New angle, focal perspective, aperture, or DOF | `optical-restyle`; state the requested optical consequence and allow only the reconstruction it requires. |
+
+Ambiguous “make it cinematic/editorial/professional” requests are not permission to relight, recolor, and change optics together. Choose the smallest axis that produces the requested visible result.
+
+## Layer Compilation
+
+Read [lighting/skin recipes](lighting-skin-color-temperature-recipes.md) and [tone/exposure/style/device recipes](tone-exposure-style-device-recipes.md).
+
+1. **EDIT** — scope and invariant photograph structure.
+2. **LIGHT** — one physical L, one E tonal placement, one T source-color relationship, and optional A. Explicitly place highlights, midtones, shadows, and black point.
+3. **RENDER** — one G palette/curve and one D capture response. Translate a camera name into tonal steps, highlight roll-off, color separation, microcontrast, sharpening, and dynamic range.
+4. **SKIN** — one S scale plus one P reflection finish. D noise/grain never acts as skin texture.
+5. **AVOID** — only failures not already prevented positively.
+
+If the user names a camera brand without describing an effect, route it to the nearest device class and omit invented manufacturer color science. If the user supplies a film stock or exact look, retain the name once and still state its visible behavior.
 
 ## Observable Outcomes
 
-| Scene | Specify this result instead of a style adjective |
+| Request | Specify this result instead of a bare adjective |
 | --- | --- |
-| Texture-only | The same source light and optics remain; plastic smoothness is replaced by faint regional detail and bounded original highlights. |
-| Soft window | One broad gradient crosses subject and nearby surfaces; skin retains luminous midtones and soft highlight roll-off. |
-| Editorial | One large key produces a short soft nose shadow, one catchlight, gentle far-cheek separation, and bounded facial highlights. |
-| Direct flash | Compact source-facing highlights remain separated, the cheeks retain tonal shape, and the room falls off with distance. |
-| Golden hour | Warm side-backlight defines hair and shoulders; the camera-facing side follows highlight-priority exposure without global orange tint. |
-| Neon | One colored key and one weaker opposite rim remain directionally distinct; skin reflects color only on illuminated planes. |
-| A6 | Against the bright rear source, the complete subject interior is black and only the original outline/pose is readable. |
+| Correct exposure | Define highlight headroom, subject midtones, directional shadows, and black point; do not say only “balanced exposure.” |
+| Change color tone | Define neutral references, skin-hue protection, warm/cool placement, saturation relationship, and contrast curve. |
+| Editorial | One controlled curve, clean color separation, intentional light, and stable identity—not “premium cinematic 8K.” |
+| Medium format | Smooth tonal steps, gradual highlight compression, restrained sharpening, rich controlled color separation. |
+| Smartphone | Broad usable range, restrained local tone mapping and edge sharpening, neutral skin, no HDR halos. |
+| 35mm negative | Gentle highlight compression, softer microcontrast, restrained film color; grain only when requested. |
+| Point-and-shoot flash | One on-axis flash, compact highlights, clear subject exposure, rapid ambient falloff, casual framing retained. |
+| Golden hour | Side-backlight defines hair/shoulders; exposure protects the rim, face follows available bounce, background carries the same warm direction. |
 
-## Six Production Prompts
+## Production Prompts
 
 ### Texture-Only Fidelity Recovery
 
 ```text
-EDIT: Enhance skin fidelity only; retain the same identity, facial proportions, feature placement, natural asymmetry, expression, pose, focal plane, depth of field, light, color, camera view, and composition.
-LIGHT: Preserve the source exposure, highlight placement, shadow transitions, white balance, and background exactly as photographed.
-SKIN: Keep continuous source skin tone and natural satin response; add faint region-specific microdetail only where face scale, focus, and illumination resolve it.
-AVOID: facial redesign, whole-face gloss, repeated texture, or global sharpening.
+EDIT: Enhance skin fidelity only; retain source identity, facial geometry, expression, pose, focal plane, depth of field, light, color, camera view, and composition.
+LIGHT: Preserve the photographed exposure, highlight map, shadow transitions, white balance, and background response.
+SKIN: Keep continuous source complexion and natural satin response; render faint regional microdetail only where face scale, focus, and illumination resolve it.
+AVOID: facial redesign, uniform facial shine, or repeated texture.
+```
+
+### Tone and Exposure Correction Without Relighting
+
+```text
+EDIT: Correct tone and exposure only; retain source identity, geometry, pose, light direction, camera view, focal plane, depth of field, objects, and composition.
+LIGHT: Keep the existing source and shadow direction; protect bright-area shape, place facial midtones clearly, open only blocked shadows, and retain a stable clean black point.
+RENDER: Neutralize the unwanted color cast while preserving skin hue, white reference objects, wardrobe color, and the source capture character.
+SKIN: Preserve source reflectance and scale-resolved detail.
+AVOID: flat HDR tone mapping or global color wash.
 ```
 
 ### Soft Window Naturalism
 
 ```text
-EDIT: Relight this portrait; retain source identity, facial proportions, feature size and placement, natural asymmetry, expression, pose, focal plane, depth of field, and composition.
-LIGHT: Use one large soft window key above camera-left, creating a broad left-to-right falloff across skin, clothing, and the nearby wall; keep midtones luminous with weak room bounce and natural highlight roll-off.
-SKIN: Use clean continuous tone, a satin-matte balance, and faint focus-aware regional microdetail.
-AVOID: identity drift, uniform facial shine, texture overlay, or scene redesign.
+EDIT: Relight this portrait; retain source identity, facial proportions, expression, pose, camera view, focal plane, depth of field, and composition.
+LIGHT: Use one large window key above camera-left, with a broad left-to-right falloff across skin, clothing, and wall. Hold luminous facial midtones, smooth highlight headroom, separated soft shadows, and weak room bounce in neutral daylight.
+SKIN: Use continuous source complexion, a soft-daylight finish, and faint focus-aware regional detail.
+AVOID: identity drift, uniform shine, or scene redraw.
 ```
 
-### Balanced Editorial
+### Medium-Format Editorial Portrait
 
 ```text
-EDIT: Relight this portrait; retain source identity, facial proportions, feature placement, natural asymmetry, expression, pose, focal plane, depth of field, and composition.
-LIGHT: Place one large soft key above camera-left for restrained Rembrandt modeling, a short soft nose shadow, one catchlight, gentle far-cheek separation, and a neutral background response; preserve clear midtones rather than forcing dramatic darkness.
-SKIN: Keep source-consistent tone, bounded T-zone highlights, softer cheek reflectance, and scale-aware detail.
-AVOID: facial idealization, whole-face gloss, repeated pores, or background redraw.
+EDIT: Relight and apply a medium-format editorial capture; retain source identity, facial geometry, expression, pose, viewpoint, focal plane, depth of field, framing, and scene structure.
+LIGHT: Place one large soft key above camera-left for clear midtones, a short soft nose shadow, one catchlight, gentle far-cheek separation, and smooth highlight headroom.
+RENDER: Use neutral editorial color with smooth tonal steps, gradual highlight compression, rich controlled color separation, restrained sharpening, and coherent focus transition.
+SKIN: Keep bounded T-zone reflection and scale-aware optical detail.
+AVOID: facial idealization or background reconstruction.
 ```
 
-### Direct-Flash Snapshot
+### Point-and-Shoot Direct Flash
 
 ```text
-EDIT: Relight this portrait as a direct-flash photograph; retain source identity, facial geometry, expression, pose, focal plane, camera view, and composition.
-LIGHT: Use one small on-camera flash with rapid room falloff. Keep compact highlights on light-facing convexities, separated rather than joined across the face; retain cheek and jaw tonal shape and one flash-consistent catchlight.
-SKIN: Use a natural satin-matte base with subtle focus-resolved detail and clean color continuity.
-AVOID: flat facial exposure, a continuous shine layer, texture overlay, or cutout edges.
+EDIT: Apply a clean point-and-shoot flash capture; retain source identity, facial geometry, expression, pose, viewpoint, focal plane, framing, and background structure.
+LIGHT: Use one small on-axis flash. Expose the subject in clear midtones with compact separated highlights, firm clean blacks, and rapid ambient falloff behind the subject.
+RENDER: Use neutral-to-cool highlight color, modest color punch, direct compact-camera microcontrast, and no added grain.
+SKIN: Keep continuous complexion with flash-bounded reflection and only focus-resolved detail.
+AVOID: full-face glare, crushed features, or cutout edges.
+```
+
+### 35mm Natural-Light Documentary
+
+```text
+EDIT: Apply a restrained 35mm color-negative documentary response; retain source identity, geometry, expression, pose, original light direction, viewpoint, focal plane, depth of field, and composition.
+LIGHT: Preserve the available-light exposure pattern, readable subject midtones, directional shadows, and practical highlights.
+RENDER: Use gentle highlight compression, slightly softened microcontrast, muted environmental saturation with stable skin chroma, and restrained film color separation; add no grain unless requested.
+SKIN: Preserve source-shaped reflection and regional detail at the resolved scale.
+AVOID: vintage color wash or artificial texture overlay.
+```
+
+### Smartphone Available-Light Portrait
+
+```text
+EDIT: Apply a natural smartphone computational capture; retain source identity, facial geometry, pose, camera view, focal plane, depth of field, crop, and scene content.
+LIGHT: Preserve the existing source direction; keep facial midtones readable, bright sources shaped, shadows separated, and the black point stable.
+RENDER: Use broad usable dynamic range, neutral skin color, restrained local tone mapping, and controlled edge sharpening while preserving the source depth transition.
+SKIN: Keep continuous tone, bounded highlights, and detail limited by scale and focus.
+AVOID: HDR halos, crunchy edges, or portrait-mode cutout blur.
 ```
 
 ### Golden-Hour Side Backlight
 
 ```text
-EDIT: Relight this portrait; retain source identity, facial proportions, feature placement, natural asymmetry, pose, focal plane, depth of field, and composition.
-LIGHT: Place warm sunset light behind and to one side, outlining hair and shoulders. Expose for the rim; let the camera-facing side follow natural reflected fill, and align background warmth, long shadows, and one restrained flare with the source.
-SKIN: Keep illuminated tone continuous with bounded warm reflections and focus-aware regional detail.
-AVOID: facial redesign, global orange tint, artificial fill, or cutout halos.
+EDIT: Relight this portrait; retain source identity, facial proportions, feature placement, pose, camera view, focal plane, depth of field, and composition.
+LIGHT: Place warm sunset light behind and to one side, outlining hair and shoulders. Expose for the rim; derive camera-facing brightness from natural reflected fill, and align background warmth, long shadows, and one restrained flare with the source.
+SKIN: Keep illuminated complexion continuous with bounded warm reflections and focus-aware regional detail.
+AVOID: facial redesign, global orange wash, or detached halos.
 ```
 
 ### A6 Full-Black Silhouette
 
 ```text
 EDIT: Relight this portrait; retain the subject's original outline, proportions, pose, placement, camera view, and composition.
-LIGHT: Expose for one bright source behind the subject. Remove fill, catchlights, and all internal illumination; render the complete subject as one continuous black silhouette while the background responds naturally to the rear source.
+LIGHT: Expose for one bright source behind the subject. Remove fill, catchlights, and internal illumination; render the complete subject as one continuous black silhouette while the background follows the rear source.
 SKIN: No facial, skin, hair, clothing, accessory, or body detail is visible inside the silhouette.
-AVOID: outline drift, gray interior fill, cutout halos, or residual facial light.
+AVOID: outline drift, gray interior fill, or residual facial light.
 ```
 
 ## Skin Clauses
@@ -109,7 +157,7 @@ AVOID: outline drift, gray interior fill, cutout halos, or residual facial light
 
 | Recipe | Model-facing clause |
 | --- | --- |
-| S0 `<256 px` | Maintain continuous source skin tone and natural light response; the visible face scale does not resolve added surface detail. |
+| S0 `<256 px` | Maintain continuous source complexion and natural light response; the visible face scale does not resolve added surface detail. |
 | S1 `256–511 px` | Render faint regional microdetail only on illuminated in-focus skin; preserve clean eye-area and lip boundaries. |
 | S2 `≥512 px` | Render fine camera-resolved detail: softer cheek pores, slightly clearer nose pores, natural lip texture, and sparse vellus detail only where source focus resolves it. |
 
@@ -117,50 +165,52 @@ AVOID: outline drift, gray interior fill, cutout halos, or residual facial light
 
 | Recipe | Model-facing clause |
 | --- | --- |
-| P0 Source finish | Preserve the source diffuse/specular balance and the exact location, area, and intensity of existing highlights. |
+| P0 Source finish | Preserve source diffuse/specular balance and the exact location, area, and intensity of existing highlights. |
 | P1 Natural satin-matte | Use a soft diffuse base with small bounded highlights on key-facing convexities; keep cheeks and eye area less reflective. |
-| P2 Soft-daylight finish | Use luminous clean midtones, broad soft roll-off, and restrained highlights that follow the window or sky source. |
+| P2 Soft-daylight | Use luminous clean midtones, broad soft roll-off, and restrained highlights shaped by the window or sky source. |
 | P3 Editorial satin | Keep controlled T-zone highlights, smooth cheek separation, and visible but low-amplitude optical detail. |
-| P4 Direct-flash finish | Keep compact flash-facing highlights with clear boundaries; do not connect them into a continuous facial shine. |
-| P5 Clean beauty finish | Keep even broad color, natural three-dimensional reflection, and fine optical detail without porcelain smoothness. |
-| P6 Available-light finish | Preserve source-driven highlight irregularity and focus falloff without adding marks, grain, or stronger color variation. |
+| P4 Direct flash | Keep compact flash-facing highlights with clear boundaries; do not connect them into a continuous facial shine. |
+| P5 Clean beauty | Keep even broad color, natural three-dimensional reflection, and fine optical detail without porcelain smoothness. |
+| P6 Available light | Preserve source-driven highlight placement and focus falloff without adding marks, grain, or stronger color variation. |
 
 ## Priming-Safe Wording
 
-Do not place these shortcuts in a default model prompt; use the replacement behavior instead:
+Do not put these shortcuts in a default generation prompt; compile the observable behavior instead.
 
 | Risky shortcut | Safer behavior |
 | --- | --- |
-| `real skin`, `ultra-real skin` | Specify tone continuity, regional microdetail, and bounded reflection separately. |
-| `visible pores`, `8K pores` | `faint region-specific pores only where scale, focus, and light resolve them` |
-| `skin color variation` | `continuous source-consistent tone with gentle local transitions` |
-| `minor imperfections`, freckles, blemishes, blackheads | `preserve source-identifying skin anchors without adding or amplifying marks` |
+| real/ultra-real skin | Continuous source complexion + regional microdetail + bounded reflection. |
+| visible/8K pores | `faint regional pores only where scale, focus, and light resolve them` |
+| HDR | Name highlight, midtone, shadow, and black-point placement; use restrained local tone mapping only for D6. |
+| cinematic/editorial/premium | Select one G and state its palette, saturation relationship, curve, and highlight behavior. |
+| DSLR/medium format/smartphone/film | Select one D and state its tonal steps, dynamic range, microcontrast, sharpening, and noise behavior. |
+| skin color variation | `continuous source-consistent complexion with gentle light-driven transitions` |
+| freckles, blemishes, blackheads, imperfections | `preserve source-identifying skin anchors without adding or amplifying marks` |
 | oily/dewy/wet skin | `small bounded specular highlights on key-facing convexities` |
-| fully matte skin | `natural satin-matte balance with soft highlight roll-off` |
 | raw/coarse/gritty texture | `fine low-amplitude optical microdetail` |
-| film grain | Omit by default; never use grain to create skin realism. |
-| high contrast, deep shadows | State only the physical exposure consequence of an explicitly selected dramatic light. |
-| sharper, ultra-detailed, crisp everywhere | `detail follows the source focal plane, depth of field, distance, and illumination` |
+| 8K, ultra-detailed, crisp everywhere | `detail follows source scale, focal plane, distance, and illumination` |
 
-## Replace One Failed Line
+## Replace One Failed Layer
 
 | Failure | Replacement strategy |
 | --- | --- |
-| Nearly unchanged | Rewrite LIGHT or SKIN with one explicit visible result; remove `subtle`, `minimal`, and `change as little as possible` from that line only. |
-| Identity drift | Reduce EDIT to `retain source identity, face outline/proportions, feature size/placement, hairline, expression, and composition`; do not describe beauty traits. |
-| Plastic smoothness remains | Replace SKIN with `continuous source tone; bounded source-shaped highlights; faint regional detail only where focus and light resolve it`. |
-| Skin becomes artificial | Remove all imperfection, color-variation, grain, roughness, and line-emphasis terms; use P0/P1 plus the scale-appropriate S clause. |
-| Image becomes dim without intent | Switch exposure to `source-matched` or `balanced`, restore luminous midtones, and remove dramatic-shadow words. |
-| Competing lights | Keep one key, only necessary environmental fill, and one background response. |
-| Artificial flare/shadow patch | State the source, landing surface, edge transition, and continuous response across subject and environment. |
-| A6 retains interior detail | Remove ordinary S/P and all subject lighting; require one continuous black interior. |
+| Nearly unchanged | Replace only the requested LIGHT, RENDER, or SKIN layer with one stronger observable result. |
+| Unchanged exposure | Specify highlight headroom, facial midtones, directional shadows, and black point. |
+| Flat HDR result | Remove global recovery language; use E1 and preserve directional separation. |
+| Style is only a tint | Add G curve and saturation behavior while protecting skin and neutral objects. |
+| Device look is absent | Replace the device name with D tonal, highlight, microcontrast, sharpening, and dynamic-range behavior. |
+| Device changes viewpoint | Restore source perspective/crop/focal plane/DOF; keep only capture response. |
+| Plastic skin remains | Replace SKIN with continuous source complexion, bounded source-shaped highlights, and faint focus-aware regional detail. |
+| Film look dirties skin | Remove grain/cast/imperfection terms; keep G/D tone response and let S/P define skin. |
+| A6 retains interior detail | Remove S/P and all subject light; require one continuous black interior. |
 
 ## Forbidden Prompt Construction
 
-- generic beauty or realism stacks such as `beautiful, premium, cinematic, ultra-real, 8K, highly detailed`;
-- exhaustive identity descriptions that invite the model to reconstruct a new face;
-- default imperfection bundles, global grain, uniform pores, or whole-face shine;
-- camera/lens/aperture changes during an edit unless explicitly requested;
-- multiple key-light styles in one prompt;
-- dramatic darkness language when the user did not request a dramatic exposure;
-- A6 combined with visible subject texture, catchlights, fill, or garment detail.
+- multiple devices, film stocks, eras, or grades in one prompt;
+- bare quality/style stacks such as `premium, cinematic, ultra-real, 8K, highly detailed`;
+- changing camera angle, focal perspective, crop, or depth of field without explicit optical-restyle intent;
+- naming a camera brand without describing the capture response;
+- global highlight recovery plus global shadow lifting;
+- grain, noise, sharpening, or imperfections used as skin detail;
+- competing key lights or a grade that recolors the full face;
+- A6 combined with visible subject texture, catchlights, fill, or clothing detail.

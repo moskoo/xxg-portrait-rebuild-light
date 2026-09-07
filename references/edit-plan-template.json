@@ -6,12 +6,18 @@
   "operation_scope": "relight-and-skin",
   "recipe_selection": {
     "lighting": "L2",
+    "exposure": "E1",
     "skin_scale": "S1",
     "skin_finish": "P2",
     "color_temperature": "T1",
+    "color_grade": "G0",
+    "capture_profile": "D0",
     "atmosphere": "A0"
   },
   "optics_policy": {
+    "optical_restyle_requested": false,
+    "perspective": "preserve-source",
+    "crop": "preserve-source",
     "focal_plane": "preserve-source",
     "depth_of_field": "preserve-source"
   },
@@ -72,13 +78,19 @@
       "fill_policy": "ambient-reflection",
       "shadow_policy": "retained-detail",
       "highlight_policy": "retained",
-      "acceptance_criterion": "The selected key direction, exposure consequence, shadow transition, highlight roll-off, and background response are visible and physically coherent without duplicate sources or artificial sculpting."
+      "acceptance_criterion": "The selected L/E/T/A direction, highlight and midtone placement, shadow transition, black point, and background response are visible and physically coherent without duplicate sources or artificial sculpting."
     },
     {
       "id": "clean-skin-realism",
       "required": true,
       "acceptance_view": "Normal viewing size and the face-scale-defined close view",
       "acceptance_criterion": "Skin first reads clean and continuous, with bounded source-shaped highlights and faint regional detail limited by scale, focus, and illumination; no uniform gloss or texture overlay."
+    },
+    {
+      "id": "tone-and-capture-response",
+      "required": false,
+      "acceptance_view": "Full frame at normal viewing size",
+      "acceptance_criterion": "When G or D differs from source, the requested palette, curve, highlight behavior, microcontrast, sharpening, and dynamic-range response are visible while source viewpoint, crop, focal plane, and depth of field remain stable."
     }
   ]
 }

@@ -8,12 +8,12 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img   src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.0.0-black?style=flat-square" alt="Version 2.0.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.1.0-black?style=flat-square" alt="Version 2.1.0"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | 한국어
 
-`xxg-portrait-rebuild-light`는 기존 인물 사진을 위한 image edit Skill입니다. V2는 조명, 피부의 넓은 색조, 제한된 반사, 크기와 초점에 따른 미세 질감, 피부의 사진적 마감을 분리해 제어하며 오염, 과도한 암부, 입자, 임의의 결점에 의존하지 않고 사실감을 만듭니다.
+`xxg-portrait-rebuild-light`는 기존 인물 사진을 위한 image edit Skill입니다. V2.1은 물리 조명, 노출 배치, 색조·스타일, 촬영 장치 응답, 피부의 넓은 색조, 제한된 반사, 크기와 초점에 따른 미세 질감을 분리해 제어합니다.
 
 인물을 다시 그리는 것이 아니라 조명을 바꾸는 데 중점을 둡니다. 동일 인물, 기존 얼굴 구조와 비율, 자연스러운 미세 비대칭, 표정, 자세, 카메라 시점, 구도를 유지하며 플라스틱 피부, 거친 입자 피부, 지저분한 색 얼룩, 주름을 과장해 만든 가짜 입체감을 방지합니다.
 
@@ -27,6 +27,9 @@
 - `texture-only` 모드로 원본 조명, 색, 초점, 심도, 장면 내용을 바꾸지 않고 피부 충실도만 복원합니다.
 - 깨끗한 넓은 색조, 원광원에 따른 제한된 하이라이트, 부위별 미세 질감을 분리해 플라스틱 느낌을 줄입니다.
 - 원본 일치, 새틴 매트, 부드러운 주광, 에디토리얼, 직광 플래시, 뷰티, 현장광의 `P0–P6` 피부 마감을 제공합니다.
+- 하이라이트 여유, 얼굴 중간톤, 방향성 그림자, 블랙 포인트를 정의하는 `E0–E7` 노출 레시피를 제공합니다.
+- 풀프레임, 중형, 35mm, CCD, 똑딱이 직광 플래시, 스마트폰, 즉석·일회용 카메라를 위한 `G0–G8` 색조와 `D0–D8` 촬영 응답을 제공합니다.
+- 촬영 장치 응답과 광학을 분리하여 명시적인 optical-restyle이 없으면 시점, 원근, 크롭, 초점면, 심도를 유지합니다.
 - 플라스틱처럼 매끈한 피부, 과도한 보정, 밀랍 인형 같은 질감을 수정합니다.
 - 원래의 입술 결, 눈가 단계, 절제된 피지 반사, 얼굴 표시 크기에 맞는 미세 질감을 유지합니다.
 - 약한 역광, 분리되어 보이는 실내 창문광, 평면적인 조명, 의도하지 않은 암부 뭉개짐, 출처 없는 하이라이트를 수정합니다.
@@ -44,30 +47,31 @@
 Skill은 먼저 내부에서 디렉터식 결정을 수행합니다.
 
 ```text
-Scope 작업 범위 → Key 키 라이트 → Exposure 노출 의도 → Fill 필 → Shadow 그림자 → Skin scale 피부 크기 → Skin finish 피부 마감 → Background 배경 → Atmosphere 분위기
+Scope 작업 범위 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A
 ```
 
-이미지 모델에 전달하는 프롬프트는 영어 45–95단어의 네 줄로 압축합니다.
+이미지 모델에는 영어 네 줄을 전달하며 색조 또는 장치 효과를 요청할 때만 `RENDER` 줄을 추가합니다. 보통 55–110단어입니다.
 
 ```text
-EDIT: Choose texture-only or relight-and-skin; retain source identity, geometry, expression, pose, focal plane, depth of field, camera view, and composition.
-LIGHT: One key with explicit direction, exposure consequence, shadow transition, background response, color, and at most one source-consistent atmosphere.
-SKIN: One scale-aware S behavior plus one source-consistent P finish, with continuous tone and bounded highlights.
-AVOID: Identity drift, whole-face gloss, repeated texture, or structural scene redraw.
+EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
+LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
+RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
+SKIN: One scale-aware S plus one light-consistent P finish.
+AVOID: Only two or three source-specific failures.
 ```
 
 정체성 감사, 물체 목록, 반복되는 부정어, 여러 사진 스타일을 하나의 프롬프트에 쌓지 않습니다. 제약이 서로 상쇄되거나 원본이 그대로 복제되는 현상을 줄이기 위해서입니다.
 
-피부만 수정할 때 V2는 `L0 + T0 + A0`을 강제하고 원본 하이라이트 위치, 노출, 화이트 밸런스, 초점과 심도를 유지합니다. 재조명은 `source-matched`, `balanced`, `highlight-priority`, `shadow-priority`, `low-key`, `silhouette`, `high-key` 중 노출 의도를 선택합니다. 별도 지정이 없으면 깨끗한 원본 일치 또는 균형 노출을 사용하고 극적인 암부는 명시적으로 요청될 때만 적용합니다.
+피부만 수정할 때 V2.1은 `L0 + E0 + T0 + G0 + D0 + A0`을 강제합니다. 색조 보정은 E/T/G, 장치 모사는 G/D와 필요한 E, 재조명은 L/E/T/A만 변경합니다. `optical-restyle`이 명시되지 않으면 시점, 원근, 크롭, 초점면, 심도를 유지합니다.
 
-`A6`은 강제 덮어쓰기 항목입니다. 선택하면 항상 실루엣 노출로 전환하고 유효한 주광을 인물 뒤로 옮기며 모든 필 라이트와 캐치라이트를 제거해 인물 내부 전체를 검정으로 만듭니다. L과 T는 역광과 배경만 제어하며 S와 P는 비활성화됩니다.
+`A6`은 E6 실루엣 노출을 강제하고 유효한 주광을 인물 뒤로 옮기며 필 라이트와 캐치라이트를 제거해 인물 내부를 검정으로 만듭니다. L/T와 G/D는 역광과 배경에만 적용되고 S/P는 비활성화됩니다.
 
 ## 레시피
 
 한 번에는 다음만 선택합니다.
 
 ```text
-L 조명 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 색온도 하나 + A 분위기 0개 또는 1개
+L 조명 하나 + E 노출 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 광색 하나 + G 색조 하나 + D 촬영 응답 하나 + A 분위기 0개 또는 1개
 ```
 
 ### 조명 L
@@ -87,6 +91,19 @@ L 조명 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 색온도 
 | `L10` | 골든아워 석양 측면 역광 |
 | `L11` | 사이버펑크 시안/마젠타 이중 네온 |
 | `L12` | 깨끗하고 균일한 상업용 소프트 라이트 |
+
+### 노출 E
+
+| 코드 | 용도 |
+| --- | --- |
+| `E0` | 원본 하이라이트, 중간톤, 그림자, 블랙 포인트 유지 |
+| `E1` | 선명한 중간톤과 방향성 그림자를 갖는 자연스러운 균형 노출 |
+| `E2` | 밝은 광원이나 림을 보호하고 비조명면은 실제 반사광에 따름 |
+| `E3` | 밝은 광원을 제어하며 막힌 그림자 정보만 복원 |
+| `E4` | 흰색 질감과 부드러운 얼굴 형태를 유지하는 하이키 |
+| `E5` | 선택된 조명면만 읽히는 중간톤에 두는 로우키 |
+| `E6` | 완전 검은 실루엣 노출. `A6` 전용 |
+| `E7` | 직광 플래시 피사체 노출과 빠른 주변광 감쇠 |
 
 ### 피부 크기 S
 
@@ -117,6 +134,37 @@ L 조명 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 색온도 
 | `T2` | 건강하고 중립적인 피부 영역을 유지하는 골든 웜 라이트 |
 | `T3` | 따뜻한 키 라이트와 차가운 배경 주변광 |
 | `T4` | 시안/마젠타 네온 관계 |
+| `T5` | 화면 전체를 파랗게 만들지 않는 흐린 날·블루아워의 쿨 뉴트럴 광 |
+| `T6` | 거리에 따라 색이 감쇠하는 따뜻한 텅스텐 실경 조명 |
+| `T7` | 피부와 중성 물체를 보호하는 주광·실경 조명의 혼합 균형 |
+
+### 색조·스타일 G
+
+| 코드 | 용도 |
+| --- | --- |
+| `G0` | 원본 팔레트와 커브 유지 |
+| `G1` | 중립 에디토리얼 색과 절제된 S 커브 |
+| `G2` | 정확한 흰색과 밝은 중간톤의 깨끗한 상업 색 |
+| `G3` | 환경 채도는 약간 낮추고 피부 색도는 지키는 다큐멘터리 색 |
+| `G4` | 조명된 피부는 따뜻하게, 배경과 그림자의 쿨 톤은 제한적으로 |
+| `G5` | 파스텔 중간톤과 부드럽게 압축된 하이라이트 |
+| `G6` | 피부, 머리, 의상, 배경이 분리되는 계조 흑백 |
+| `G7` | 절제된 1970년대 인화 응답. 입자는 명시할 때만 |
+| `G8` | 깨끗한 1990s/Y2K 직광 플래시 색 |
+
+### 촬영 응답 D
+
+| 코드 | 용도 |
+| --- | --- |
+| `D0` | 원본 촬영 응답 유지 |
+| `D1` | 현대 풀프레임: 깨끗한 디테일과 부드러운 하이라이트 |
+| `D2` | 디지털 중형: 매끄러운 계조, 풍부한 색 분리, 절제된 샤프닝 |
+| `D3` | 35mm 컬러 네거티브: 부드러운 하이라이트 압축과 약한 미세 대비 |
+| `D4` | CCD/디지털 컴팩트: 직접적이고 선명한 톤과 제한된 하이라이트 여유 |
+| `D5` | 똑딱이 직광 플래시. `L6 + E7`과 조합 |
+| `D6` | 스마트폰 계산 사진: HDR 후광과 거친 경계 없는 넓은 범위 |
+| `D7` | 즉석 사진 톤. 테두리와 입자는 명시할 때만 |
+| `D8` | 일회용 카메라 응답. 노출 결함과 입자는 명시할 때만 |
 
 ### 분위기 A
 
@@ -217,52 +265,66 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 
 ## 사용 예시
 
+### 색조와 노출 보정
+
+```text
+$xxg-portrait-rebuild-light로 이 인물 사진을 L0 + E1 + S1 + P0 + T7 + G1 + D0 + A0으로 편집한다.
+원본 광원 방향을 유지하고 밝은 영역의 형태를 보호하며 얼굴 중간톤을 명확히 하고 막힌 그림자만 열어 안정적인 블랙 포인트를 유지한다. 피부색, 흰색 기준 물체, 의상색, 시점, 초점면, 심도와 장면을 보존하며 불필요한 색 편향을 보정한다.
+```
+
+### 스마트폰 계산 사진 응답
+
+```text
+$xxg-portrait-rebuild-light로 이 인물 사진을 L0 + E1 + S1 + P1 + T0 + G0 + D6 + A0으로 편집한다.
+원본 물리 조명과 광학을 유지한다. 넓은 실용 다이내믹 레인지, 자연스러운 피부색, 절제된 로컬 톤 매핑과 가장자리 샤프닝을 사용하며 크롭, 초점면, 심도를 바꾸지 않는다.
+```
+
 ### 클래식 패션 에디토리얼
 
 ```text
-$xxg-portrait-rebuild-light로 이 인물 사진을 L8 + S2 + P3 + T1 + A0으로 편집한다.
+$xxg-portrait-rebuild-light로 이 인물 사진을 L8 + E1 + S2 + P3 + T1 + G1 + D2 + A0으로 편집한다.
 전면 측상단의 대형 소프트 키 라이트로 절제된 렘브란트 조명을 만들고, 약한 필로 눈두덩을 보존한다. 한쪽 볼은 깊고 부드러운 그림자에 두며 광원과 일치하는 캐치라이트 하나만 만든다. 피부는 깨끗하고 건강한 저대비 사진 미세 질감으로 유지한다.
 ```
 
 ### 시네마틱 로우키 웜/쿨
 
 ```text
-$xxg-portrait-rebuild-light로 이 인물 사진을 L9 + S1 + P3 + T3 + A5로 편집한다.
+$xxg-portrait-rebuild-light로 이 인물 사진을 L9 + E5 + S1 + P3 + T3 + G4 + D1 + A5로 편집한다.
 따뜻한 측면 키 라이트로 선택된 면을 비추고 로우키 노출에서는 전면 필을 사용하지 않는다. 차가운 색은 배경과 림에만 남기며 광원 방향을 따르는 매우 옅은 헤이즈를 더한다. 조명된 피부는 깨끗하고 연속적으로 유지하고 입체감은 빛으로 만든다.
 ```
 
 ### 골든아워 역광
 
 ```text
-$xxg-portrait-rebuild-light로 이 인물 사진을 L10 + S1 + P2 + T2 + A4로 편집한다.
+$xxg-portrait-rebuild-light로 이 인물 사진을 L10 + E2 + S1 + P2 + T2 + G1 + D1 + A4로 편집한다.
 측후면의 따뜻한 석양광으로 머리카락과 어깨 윤곽을 만든다. 석양 하이라이트 기준으로 노출하고 전면 필은 사용하지 않는다. 얼굴의 비조명면을 자연스러운 부분 실루엣까지 낮추며 밝은 가장자리에는 약한 블룸을 허용한다. 배경에도 같은 방향의 비스듬한 온광과 긴 그림자를 만든다.
 ```
 
 ### 사이버펑크 네온
 
 ```text
-$xxg-portrait-rebuild-light로 이 야간 인물 사진을 L11 + S1 + P6 + T4 + A3로 편집한다.
+$xxg-portrait-rebuild-light로 이 야간 인물 사진을 L11 + E5 + S1 + P6 + T4 + G4 + D1 + A3로 편집한다.
 시안 림 라이트와 마젠타 키 라이트의 방향을 명확히 분리하고 얼굴 중앙에는 자연스러운 피부색 영역을 유지한다. 보케는 초점이 흐린 배경에만 두고 눈이나 피부 위에는 겹치지 않는다.
 ```
 
 ### 피사체 전체의 검은 역광 실루엣
 
 ```text
-$xxg-portrait-rebuild-light로 이 인물 사진을 L10 + S1 + P0 + T2 + A6으로 편집한다.
+$xxg-portrait-rebuild-light로 이 인물 사진을 L10 + E6 + S1 + P0 + T2 + G0 + D0 + A6으로 편집한다.
 유효한 주광을 인물 뒤에 배치하고 밝은 배경을 기준으로 노출한다. 모든 정면·측면 필 라이트, 캐치라이트, 인물 내부 조명을 제거하고 얼굴, 피부, 머리카락, 의상과 신체 내부 전체를 깨끗하고 연속적인 검은 실루엣으로 만든다. 원래 외곽선, 신체 비율, 자세, 카메라 시점과 구도는 유지한다.
 ```
 
 ### 부드러운 창문광과 창문 그림자
 
 ```text
-$xxg-portrait-rebuild-light로 이 실내 인물 사진을 L2 + S1 + P2 + T1 + A1로 편집한다.
+$xxg-portrait-rebuild-light로 이 실내 인물 사진을 L2 + E1 + S1 + P2 + T1 + G0 + D0 + A1로 편집한다.
 좌측 전방 상단의 부드러운 창문광으로 왼쪽에서 오른쪽으로 넓고 완만한 감광을 만든다. 약한 실내 필로 암부를 보존하고, 저대비 창문 그림자 하나를 인물과 인접 벽에 연속적으로 드리운다. 붙여 넣은 것처럼 보이지 않게 한다.
 ```
 
 ### 나뭇잎 그림자 인물 사진
 
 ```text
-$xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + S1 + P2 + T1 + A2로 편집한다.
+$xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + E1 + S1 + P2 + T1 + G0 + D0 + A2로 편집한다.
 넓은 스카이라이트로 인물을 비춘다. 성긴 나뭇잎 그림자가 얼굴과 의복의 곡률을 따라 부드럽게 끊기게 하고, 물리적으로 타당한 위치라면 눈과 볼 일부를 지나가게 한다. 배경에도 같은 방향의 반응을 만들고 그림자 색과 가장자리 전이를 스카이라이트와 표면 곡률에 맞춘다.
 ```
 
@@ -272,6 +334,7 @@ $xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + S1 + P2 + T1 + A
 - 입력 사진과 동일한 인물을 유지하며 얼굴을 미형화하거나 인위적으로 좌우 대칭화하지 않습니다.
 - 피사체, 의상, 배경이 같은 광원 체계를 따릅니다.
 - 그림자 깊이, 하이라이트 롤오프, 실루엣 강도는 선택한 노출 의도에 따르며 모든 것을 보이게 하려고 역광이나 로우키를 평면화하지 않습니다.
+- E는 하이라이트 여유, 피사체 중간톤, 방향성 그림자와 블랙 포인트를 명확히 제어하고 G/D는 광학을 임의로 바꾸지 않으며 하나의 일관된 색조와 촬영 응답을 만듭니다.
 - 원본 피부색을 유지하며 피부는 건강하고 깨끗하고 연속적입니다. 하이라이트는 광원에 한정되고 부위별 미세 질감은 크기, 초점, 빛이 허용하는 곳에만 나타납니다.
 - 입자, 색 노이즈, 지저분한 회색 그림자, 국부 과도 샤프닝, 과장된 주름으로 사실감을 흉내 내지 않습니다.
 - 창문 그림자, 나뭇잎 그림자, 보케, 석양 플레어, 광선에는 타당한 광원과 투영 위치가 있습니다.
@@ -283,6 +346,7 @@ $xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + S1 + P2 + T1 + A
 - [Skill 주요 규칙](SKILL.md)
 - [간결 프롬프트 컴파일러](references/prompt-recipes.md)
 - [조명·피부·색온도·분위기 레시피](references/lighting-skin-color-temperature-recipes.md)
+- [색조·노출·스타일·장치·광학 레시피](references/tone-exposure-style-device-recipes.md)
 - [백엔드 기능 설명](references/backend-and-clean-realism.md)
 - [Python 의존성](requirements.txt)
 - [기여 가이드](CONTRIBUTING.md)

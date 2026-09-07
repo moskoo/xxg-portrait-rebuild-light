@@ -1,4 +1,4 @@
-# V2 Strict Local Edit Plan and Protection Gate
+# V2.1 Strict Local Edit Plan and Protection Gate
 
 Use this file only with a verified `strict-local` backend. Follow [the backend contract](backend-and-clean-realism.md) for delivery mode and invocation evidence. If strict capability is missing, continue as `best-effort`; do not create a fictional freeze plan.
 
@@ -15,15 +15,15 @@ Record same-class objects separately with a unique `id`, description, tile, `bbo
 
 ## Edit Plan
 
-A strict plan contains: source dimensions for coordinate/same-size audit only; `operation_scope`; selected L/S/P/T/A recipes; source focal-plane/DOF policy; verified backend profile; nine-tile inventory; `editable_mask`; union `protected_mask`; actual exposure, fill, shadow, and highlight policy; and an acceptance view/criterion for every required perceptual target.
+A strict plan contains: source dimensions for coordinate/same-size audit only; `operation_scope`; selected L/E/S/P/T/G/D/A recipes; source perspective/crop/focal-plane/DOF policy; verified backend profile; nine-tile inventory; `editable_mask`; union `protected_mask`; actual exposure, fill, shadow, and highlight policy; and an acceptance view/criterion for every required perceptual target.
 
 Only user-authorized objects may be marked `authorized-edit`; every other item is `frozen + required_audit`. For a full-frame `best-effort` edit, use instead:
 
 - `structural_invariants`: identity geometry, composition, and object content;
-- `authorized_appearance_changes`: scale/focus-aware skin detail, P-profile reflection, continuous source complexion, target shadows, and scene-wide illumination response;
+- `authorized_appearance_changes`: selected L/E/T/G/D/A response, scale/focus-aware skin detail, P-profile reflection, and continuous source complexion;
 - `minimum_visible_improvement`: one result visible at normal full-frame viewing size.
 
-For `texture-only`, freeze source light, highlight map, exposure, white balance, focal plane, depth of field, environment, and all non-skin content. For `relight-and-skin`, authorize only the selected L/T/A response and the matching S/P skin behavior.
+For `texture-only`, freeze source light, highlight map, exposure, white balance, color look, capture response, focal plane, depth of field, environment, and all non-skin content. For `tone-and-exposure`, authorize only E/T/G. For `relight-and-skin`, authorize selected L/E/T/A plus matching S/P. For `capture-style`, authorize only G/D and a logically required E while freezing viewpoint, crop, focal plane, and DOF. `optical-restyle` must explicitly name any authorized perspective, crop, or DOF change.
 
 A6 authorizes luminance, skin color, feature visibility, and hair/clothing/accessory surface detail inside the original subject outline to become black. Freeze the outline, proportions, pose, composition, and background. Suppress S/P. A strict A6 editable mask must cover the complete subject interior and stop at the original outline; do not darken only the face.
 
@@ -56,6 +56,6 @@ python3 "$XXG_SKILL_DIR/scripts/validate_result_assessment.py" \
   EDIT_PLAN.json RESULT_ASSESSMENT.json --output target-validation.json
 ```
 
-Mark an almost unchanged result `fail`; a difference map or `restrained processing` does not establish improvement. For `texture-only`, require preserved source light/optics plus visibly improved bounded reflection and regional focus-aware detail. For relight, require the selected L/T/A response and matching P finish. For A6, require the complete subject interior to be continuous black with no facial feature, skin color, catchlight, lit hair strand, or garment texture, while outline, proportions, pose, position, and background remain stable. Mark S/P targets not applicable.
+Mark an almost unchanged result `fail`; a difference map or `restrained processing` does not establish improvement. For `texture-only`, require preserved source light/color/capture/optics plus visibly improved bounded reflection and regional focus-aware detail. For tone/capture work, require the selected E/T/G/D response without unauthorized optical change. For relight, require selected L/E/T/A and matching P. For A6, require the complete subject interior to be continuous black with no facial feature, skin color, catchlight, lit hair strand, or garment texture, while outline, proportions, pose, position, and background remain stable. Mark S/P targets not applicable.
 
 If any required target fails, enter `prompt-handoff`: report the failure and return a complete compact prompt recompiled from the source. Do not repair locally or present the failed image as final.

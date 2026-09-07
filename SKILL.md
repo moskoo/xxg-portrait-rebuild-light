@@ -1,13 +1,13 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Edit an existing JPG, JPEG, PNG, or WebP portrait to rebuild physically coherent light and clean optical skin realism without changing the person. Use for plastic-skin or AI-look removal, texture-only fidelity enhancement, natural fill, backlight correction, soft window light or shadows, tree shadows, bokeh, golden-hour side backlight, neon, studio light, low-key beams, full-black silhouettes, or Higgsfield-Relight-like edits."
+description: "Edit an existing JPG, JPEG, PNG, or WebP portrait to rebuild physically coherent light, exposure, color, capture style, and clean optical skin realism without changing the person. Use for plastic-skin or AI-look removal, tone or white-balance correction, camera/film/device emulation, natural fill, backlight correction, window or tree shadows, bokeh, golden-hour light, neon, studio light, low-key beams, or full-black silhouettes."
 ---
 
-# XXG Portrait Rebuild Light V2
+# XXG Portrait Rebuild Light V2.1
 
 ## Objective
 
-Treat the input as the same photograph, never as a reference for a replacement portrait. Improve illumination and skin response while retaining identity, facial geometry and natural asymmetry, expression, pose, camera view, source optics, framing, and subject scale.
+Treat the input as the same photograph, never as a reference for a replacement portrait. Improve illumination, exposure, color rendering, capture character, and skin response while retaining identity, facial geometry and natural asymmetry, expression, pose, camera view, framing, and subject scale. Preserve source optics unless the user explicitly requests an optical restyle.
 
 Build realism from three separable signals:
 
@@ -19,10 +19,13 @@ Do not manufacture realism with dirt, darkness, coarse pores, uniform grain, ran
 
 ## Choose the Edit Scope
 
-- **`texture-only`**: when the user asks only to remove plastic/AI skin or recover detail, force `L0 + T0 + A0`. Preserve the source lighting, highlight placement, exposure, white balance, focal plane, depth of field, and background.
+- **`texture-only`**: when the user asks only to remove plastic/AI skin or recover detail, force `L0 + E0 + T0 + G0 + D0 + A0`. Preserve the source lighting, highlight placement, exposure, white balance, focal plane, depth of field, and background.
+- **`tone-and-exposure`**: when the user asks for brightness, highlight/shadow recovery, white balance, palette, or grading without new lighting, preserve the source light direction and edit only E/T/G.
 - **`relight-and-skin`**: when the user requests a lighting change or selects L/T/A, authorize the requested light response while preserving source focal plane and depth of field unless explicitly changed.
+- **`capture-style`**: when the user requests a camera, film, phone, CCD, or era look, edit G/D and only the exposure behavior logically required by that capture; preserve viewpoint, crop, focal plane, and depth of field.
+- **`optical-restyle`**: only when the user explicitly requests a different focal-length perspective, camera angle, aperture behavior, or depth of field. State that axis once and permit only the minimum framing/background reconstruction it requires.
 
-Never let a texture-only request become a relight or a relight request become a simple color-temperature shift.
+Never let texture repair become relighting, tone correction become a new light source, or device emulation become a new pose/viewpoint.
 
 ## Use the Host Image Editor
 
@@ -57,32 +60,35 @@ Do not use Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, or custom raster 
 
 ## Compile the Image Prompt
 
-Read [the V2 prompt compiler](references/prompt-recipes.md) and [the recipe library](references/lighting-skin-color-temperature-recipes.md). Decide internally as:
+Read [the V2.1 prompt compiler](references/prompt-recipes.md), [the lighting and skin recipes](references/lighting-skin-color-temperature-recipes.md), and [the tone/exposure/style/device recipes](references/tone-exposure-style-device-recipes.md). Decide internally as:
 
 ```text
-Scope → Key → Exposure → Fill → Shadow → Skin scale → Skin finish → Background → Atmosphere
+Scope → Key L → Exposure E → Fill/Shadow → Skin scale S → Skin finish P → Light color T → Look G → Capture D → Background/Atmosphere A
 ```
 
 Select exactly:
 
 ```text
-one L + one S + one P + one T + zero or one A
+one L + one E + one S + one P + one T + one G + one D + zero or one A
 ```
 
-Use one key-light system. Atmosphere and skin reflections must inherit its direction, size, falloff, and color. `A6` is the sole override: force silhouette exposure, remove all subject fill/catchlights/internal illumination, use L/T only for the rear source and background, and suppress both S and P.
+Use one key-light system. Atmosphere and skin reflections must inherit its direction, size, falloff, and color. E controls exposure, G controls palette/curve, and D controls capture response; none may invent another light. `A6` is the sole override: force E6 silhouette exposure, remove all subject fill/catchlights/internal illumination, use L/T only for the rear source and background, and suppress S/P.
 
-Send only four lines:
+Send four core lines, adding RENDER only for a requested grade or device response:
 
 ```text
 EDIT: scope, identity/structure lock, and source-optics lock.
-LIGHT: one key, exposure consequence, shadow transition, background response, color, and optional atmosphere.
+LIGHT: one L, one E, physical shadow/background response, T, and optional A.
+RENDER: one G plus one D, only when either differs from source.
 SKIN: one scale-aware S behavior plus one source-consistent P finish.
-AVOID: only the three or four failures most likely for this source.
+AVOID: only the two or three failures most likely for this source.
 ```
 
-- Target `45–95` English words; allow up to `125` for dense text or product scenes.
+- Use four lines when `G0 + D0`; add RENDER only for a requested grade/device. Target `55–110` English words, with an absolute ceiling of `135` for combined relight and capture-style edits.
 - State identity once. Treat the source itself as the identity card; do not invent a new age, personality, beauty description, lens, or aperture.
 - Use positive, observable photographic behavior before negative constraints. Omit recipe codes, audits, confidence, backend notes, and reasoning.
+- Compile bare words such as `cinematic`, `editorial`, `HDR`, `film`, `DSLR`, `medium format`, or `smartphone` into visible exposure, palette, tonal, microcontrast, sharpening, and dynamic-range behavior.
+- Default to `E0 + G0 + D0`. Never mix multiple device profiles or color looks. Never claim exact manufacturer color science.
 - Keep default prompts free of realism-by-dirt terms: freckles, blemishes, blackheads, rough skin, color irregularity, film grain, gritty texture, under-eye lines, and high contrast. Preserve source-specific marks without naming or amplifying them.
 - Use `deep`, `near-black`, or `hard contrast` only when the user explicitly selects backlight, hard light, low-key, neon, or silhouette behavior.
 - On retry, replace the failed line instead of appending more instructions.
@@ -106,11 +112,20 @@ Under A6, internal features are intentionally hidden. Judge identity from hair/h
 
 ## Apply Physical Light Without Unwanted Darkness
 
-- Default unspecified edits to `source-matched` or `balanced`, with clean midtones and readable but directional shadow separation.
+- Default preservation to E0 and natural relighting to E1, with clean midtones and readable but directional shadow separation.
 - Add fill only when the selected exposure requires information to remain readable. Do not flatten intended backlight, hard light, low-key, or silhouette.
 - Derive shadow edge from apparent source size and distance. Carry direction, falloff, cast shadows, and reflected color across subject, clothing, nearby surfaces, and background.
 - Keep window/tree shadows continuous across curvature and adjacent surfaces; keep bokeh only in optically defocused regions; require a visible or strongly inferred source for rays; give neon a clear primary and secondary source.
 - Under A6, render the complete subject interior as one clean black mass. Permit only a narrow source-consistent rim that does not enter the silhouette.
+
+## Apply Tone and Capture Style Precisely
+
+- Separate scene light from image rendering. L/T define the physical source; E places highlights, midtones, shadows, and black point; G defines palette and curve; D defines capture response.
+- For exposure changes, name all four tonal zones. Do not request simultaneous global highlight recovery and shadow lifting; preserve directional contrast.
+- For color/style changes, state skin-neutral placement, neutral-object behavior, saturation relationship, contrast curve, and highlight roll-off. A tint alone is not a style.
+- Translate device names into visible behavior. Full-frame, medium-format, 35mm negative, CCD compact, point-and-shoot flash, smartphone computational, instant film, and disposable-camera profiles live in the device reference.
+- Device emulation preserves camera position, perspective, crop, focal plane, and depth-of-field strength unless `optical-restyle` is explicit. If optics change, state the visible consequence rather than lens numbers alone.
+- Grain, vignetting, borders, color casts, exposure defects, and date stamps are opt-in analog artifacts. They are frame-level effects and never create skin realism.
 
 ## Preserve the Frame
 
@@ -124,19 +139,20 @@ Accept relative aspect-ratio drift of `≤5%`. Never resize, crop, pad, or exten
 
 ## Validate the Result
 
-After generation, read [the V2 identity and detail audit](references/identity-and-detail-audit.md). At normal size first, verify:
+After generation, read [the V2.1 identity and detail audit](references/identity-and-detail-audit.md). At normal size first, verify:
 
-1. the requested lighting change—or exact source-light preservation in `texture-only`—is immediately clear;
+1. the requested lighting/tone/capture change—or exact preservation of every unauthorized axis—is immediately clear;
 2. identity signature, pose, source optics, framing, and subject scale remain stable;
 3. skin reads clean before microdetail becomes visible, with bounded highlights and no uniform gloss or texture overlay;
 4. detail density follows facial region, focus, scale, and illumination rather than appearing equally sharp everywhere;
-5. subject and environment share one physical light system; A6 remains a complete black interior.
+5. subject and environment share one physical light system; exposure, grade, and capture response are coherent; A6 remains a complete black interior.
 
 If a result is nearly unchanged, strengthen one observable target. If skin becomes artificial, replace SKIN with `clean continuous source skin tone; bounded source-shaped highlights; faint region-specific microdetail only where focus and light resolve it`. Never present a failed image as final.
 
 ## Load References Only When Needed
 
 - For every prompt: `references/prompt-recipes.md` and `references/lighting-skin-color-temperature-recipes.md`
+- For tone, exposure, grading, style, device, film, camera, phone, CCD, or optics requests: `references/tone-exposure-style-device-recipes.md`
 - For tool routing, backend classification, or failure handling: `references/backend-and-clean-realism.md`
 - After generation: `references/identity-and-detail-audit.md`
 - Only for a verified strict local-edit backend: `references/edit-plan-and-protection.md`

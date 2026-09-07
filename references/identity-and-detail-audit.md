@@ -1,8 +1,8 @@
-# V2 Identity, Skin, Light, and Optics Validation
+# V2.1 Identity, Skin, Light, Tone, Capture, and Optics Validation
 
 ## Contents
 
-[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-signature-gate) · [Skin](#skin-realism-gate) · [Focus](#focus-and-detail-distribution-gate) · [Lighting](#lighting-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate)
+[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-signature-gate) · [Skin](#skin-realism-gate) · [Focus](#focus-and-detail-distribution-gate) · [Lighting](#lighting-gate) · [Tone/capture](#tone-grade-and-capture-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate)
 
 ## Evidence Record
 
@@ -10,7 +10,7 @@ Follow [the backend contract](backend-and-clean-realism.md). When a result exist
 
 ```yaml
 source_size: [W, H]
-operation_scope: texture-only | relight-and-skin
+operation_scope: texture-only | tone-and-exposure | relight-and-skin | capture-style | optical-restyle
 face_box: [x1, y1, x2, y2]
 face_top_y: y_top
 chin_y: y_chin
@@ -18,9 +18,12 @@ face_height_px: y_chin - y_top
 face_height_ratio: face_height_px / H
 recipes:
   lighting: L0
+  exposure: E0
   skin_scale: S1
   skin_finish: P0
   color_temperature: T0
+  color_grade: G0
+  capture_profile: D0
   atmosphere: A0
 light:
   mode: match-source | relight
@@ -32,6 +35,9 @@ light:
   evidence: [{type, object, observation}]
   contradictions: []
 optics:
+  optical_restyle_requested: false
+  perspective_preserved: true
+  crop_preserved: true
   focal_plane_preserved: true
   depth_of_field_preserved: true
 ```
@@ -91,11 +97,26 @@ At normal size, skin must read clean, continuous, and dimensional before any mic
 
 ## Lighting Gate
 
-- In `texture-only`, preserve source highlight placement, exposure, white balance, shadow transition, subject/environment response, and atmosphere.
-- In `relight-and-skin`, catchlight; nose/eye-socket/cheek/jaw/neck shadows; hair; clothing; and background must agree with one source system.
+- In `texture-only`, preserve source highlight placement, E0 exposure, T0 white balance, G0 look, D0 capture response, shadow transition, subject/environment response, and atmosphere.
+- In `tone-and-exposure`, preserve light direction and geometry; only the requested E/T/G axes may change.
+- In `relight-and-skin`, catchlight; nose/eye-socket/cheek/jaw/neck shadows; hair; clothing; and background must agree with one L/E/T/A system.
 - Lighting may change luminance/reflection but may not move feature boundaries or sculpt the face through localized line darkening.
-- Default/ambiguous relight should preserve luminous midtones under `source-matched` or `balanced`. Dramatic shadow loss passes only when the user explicitly selected a compatible recipe.
-- A6 requires `fill_policy: none` and one black interior; any internal feature, skin color, catchlight, lit hair, garment texture, or accessory shading fails.
+- Default/ambiguous relight should use E1 with luminous midtones. E5 shadow loss passes only when explicitly selected; E6 requires A6; E7 requires direct-flash intent.
+- A6 requires E6, `fill_policy: none`, and one black interior; any internal feature, skin color, catchlight, lit hair, garment texture, or accessory shading fails.
+
+## Tone, Grade, and Capture Gate
+
+Compare the result with the selected E/G/D definitions in [the V2.1 tone and capture recipes](tone-exposure-style-device-recipes.md).
+
+| Layer | Pass | Fail |
+| --- | --- | --- |
+| Exposure E | Highlight shape/headroom, subject midtones, directional shadows, and black point all match one declared intent. | Flat whole-frame recovery, clipped skin, unintended dimming, lifted gray blacks, or contradiction between subject and environment. |
+| Light color T | Source color appears only where that source illuminates or bounces; skin and neutral references remain plausible. | Full-frame orange/blue/neon wash or inconsistent face/neck color. |
+| Grade G | Palette, saturation relationship, curve, and highlight roll-off match one look while identity and skin hue remain stable. | A simple tint, multiple competing eras, crushed tonal separation, or recolored skin. |
+| Capture D | Tonal steps, highlight behavior, microcontrast, sharpening, dynamic range, and optional noise match one capture class. | Device name with no visible response, multiple capture classes, crunchy HDR, artificial grain, or device emulation used as skin texture. |
+| Optics | Viewpoint, perspective, crop, focal plane, and DOF remain source-matched unless `optical-restyle` is explicit. | A capture-style request changes camera position, facial perspective, crop, or background blur without authorization. |
+
+For a brand-named request, validate the compiled capture behavior, not unverifiable claims about exact manufacturer color science.
 
 ## Aspect-Ratio and Composition Gate
 
@@ -117,7 +138,10 @@ Fail a missing plan, incomplete inventory/count, mask overlap, omitted `required
 Define `acceptance_view` and `acceptance_criterion` before generation. Afterward, record `pass`, an observation, and evidence. Improvement must be visible at the specified normal view; a difference map or extreme zoom is insufficient.
 
 - `texture-only`: source light/optics remain stable; plastic smoothness is replaced by bounded reflection and scale/focus-aware regional detail.
-- `relight-and-skin`: requested direction, exposure consequence, background response, and skin reflectance are immediately legible and coherent.
+- `tone-and-exposure`: requested E/T/G change is immediately visible while source light direction, optics, identity, and scene structure remain stable.
+- `relight-and-skin`: requested L/E/T/A direction, tonal consequence, background response, and skin reflectance are immediately legible and coherent.
+- `capture-style`: requested G/D response is visible without changing viewpoint, crop, focal plane, or DOF.
+- `optical-restyle`: the requested optical consequence is visible and facial geometry remains stable; assess authorized framing changes separately.
 - Fail whole-face gloss, fully dead-matte flattening, texture overlay, uniform sharpness, unintended dimming, complexion change, or identity drift.
 - A6: require a black interior plus original outline, proportions, pose, and placement.
 
@@ -125,4 +149,4 @@ For strict results, run `scripts/validate_result_assessment.py`. Any required ta
 
 ## Final Decision
 
-Any applicable failure in identity signature, light/scope, skin realism, focus distribution, framing, frozen regions, or target improvement disqualifies the image. State `This image did not achieve the requested improvement` and return a compact prompt recompiled from source. Never present or locally repair a failed image.
+Any applicable failure in identity signature, light/scope, exposure, grade, capture response, skin realism, focus distribution, framing, frozen regions, or target improvement disqualifies the image. State `This image did not achieve the requested improvement` and return a compact prompt recompiled from source. Never present or locally repair a failed image.
