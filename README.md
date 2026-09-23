@@ -8,12 +8,12 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.1.0-black?style=flat-square" alt="Version 2.1.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
 </p>
 
 English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-`xxg-portrait-rebuild-light` is an image-edit skill for existing portraits. V2.1 separately controls physical light, exposure placement, color/style grade, capture-device response, broad skin tone, bounded reflection, and scale/focus-aware microdetail.
+`xxg-portrait-rebuild-light` is an image-edit skill for existing portraits. V2.2 separately controls physical light, exposure placement, color/style grade, capture-device response, broad skin tone, bounded reflection, and scale/focus-aware microdetail.
 
 The skill changes the lighting without redrawing the person. It preserves identity, facial structure and proportions, natural slight asymmetry, expression, pose, camera view, and composition. It avoids plastic skin, grainy skin, dirty color variation, and fake depth made by exaggerating wrinkles.
 
@@ -27,7 +27,8 @@ The skill changes the lighting without redrawing the person. It preserves identi
 - Separates device response from optics: camera-style edits preserve viewpoint, perspective, crop, focal plane, and depth of field unless optical restyle is explicitly requested.
 - Repairs weak backlighting, disconnected indoor window light, flat lighting, unintended crushed shadows, and highlights with no physical source.
 - Supports soft window light, commercial soft light, Rembrandt lighting, cinematic low-key lighting, golden hour, dual-color neon, and diagonal hard light.
-- Adds at most one physically coherent atmosphere effect: window shadow, tree shadow, background bokeh, sunset flare, subtle volumetric light, or a full-black backlit subject silhouette.
+- Adds at most one physically coherent atmosphere effect, including prism refraction, blind/lattice shadow lines, rain-wet reflections, window/tree shadow, bokeh, sunset flare, volumetric light, or a full-black silhouette.
+- Adds dedicated candle/flame and rim-led portrait keys with realistic falloff, edge placement, and restrained fill.
 - Controls subject and background in layers: key light and exposure intent first, then fill, shadows, ambient light, and color temperature.
 - Preserves identity, facial feature size and position, expression, pose, wardrobe, background structure, and source framing.
 - Reduces the skin-detail target automatically when the face is small, without canceling the requested lighting change.
@@ -60,7 +61,7 @@ AVOID: Only two or three source-specific failures.
 
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.
 
-For skin-only requests, V2.1 forces `L0 + E0 + T0 + G0 + D0 + A0`. Tone correction changes only E/T/G; capture-style changes only G/D and a logically required E. Relighting changes L/E/T/A. Viewpoint, perspective, crop, focal plane, and depth of field stay source-matched unless the user explicitly requests `optical-restyle`.
+For skin-only requests, V2.2 forces `L0 + E0 + T0 + G0 + D0 + A0`. Tone correction changes only E/T/G; capture-style changes only G/D and a logically required E. Relighting changes L/E/T/A. Viewpoint, perspective, crop, focal plane, and depth of field stay source-matched unless the user explicitly requests `optical-restyle`.
 
 `A6` forces E6 silhouette exposure, moves the effective light behind the person, removes all fill and catchlights, and renders the subject interior black. L/T and any G/D treatment affect only the rear source and background; S/P are suppressed.
 
@@ -89,6 +90,8 @@ one L light + one E exposure + one S skin scale + one P skin finish + one T ligh
 | `L10` | Golden-hour sunset side backlight |
 | `L11` | Cyberpunk cyan/magenta dual-tone neon |
 | `L12` | Clean, even commercial soft light |
+| `L13` | Candle or flame near-field key with rapid falloff |
+| `L14` | Rim-led dramatic portrait light with restrained frontal fill |
 
 ### Exposure E
 
@@ -135,6 +138,7 @@ one L light + one E exposure + one S skin scale + one P skin finish + one T ligh
 | `T5` | Cool-neutral overcast or blue-hour light without a full-frame blue wash |
 | `T6` | Warm tungsten practicals with distance-based color falloff |
 | `T7` | Mixed daylight/practical balance with believable skin and neutral objects |
+| `T8` | Candle/flame amber with distance-based warmth and neutral-deep shadows |
 
 ### Color and style grade G
 
@@ -175,6 +179,22 @@ one L light + one E exposure + one S skin scale + one P skin finish + one T ligh
 | `A4` | Gentle lens flare aligned with the sunset direction |
 | `A5` | Very subtle volumetric light with sparse dust motes |
 | `A6` | Force the entire backlit subject to a clean black silhouette; no face, skin, hair, or clothing detail remains visible inside |
+| `A7` | Prism refraction with a few source-aligned spectral bands or caustic patches |
+| `A8` | Physically projected blind/lattice light-and-shadow lines |
+| `A9` | Rain-wet atmosphere with gravity-consistent droplets and key-shaped reflections |
+
+### Extracted lighting presets
+
+| Effect | Recipe |
+| --- | --- |
+| Prism glow | `L1/L4 + E2 + Sx + P2 + T1 + G1 + D1 + A7` |
+| Blind shadow lines | `L6 + E5 + Sx + P3 + T1/T2 + G1/G4 + D1 + A8` |
+| Candlelit low key | `L13 + E5 + Sx + P6 + T8 + G3/G4 + D1 + A0/A3` |
+| Neon city | `L11 + E5 + Sx + P6 + T4 + G4 + D1 + A3/A9` |
+| Golden twilight | `L10 + E2 + Sx + P2 + T2 + G0/G1 + D0/D1 + A4` |
+| Soft morning window | `L2 + E1 + Sx + P2 + T1/T2 + G0/G1 + D0/D2 + A0/A1` |
+| Rim-led drama | `L14 + E2/E5 + Sx + P3 + T2/T3 + G1/G4 + D1 + A0/A5` |
+| Cool rain-wet low key | `L4/L11 + E5 + Sx + P6 + T5/T4 + G3/G4 + D1 + A9` |
 
 See [Lighting, skin, color-temperature, and atmosphere recipes](references/lighting-skin-color-temperature-recipes.md) for detailed prompt clauses.
 

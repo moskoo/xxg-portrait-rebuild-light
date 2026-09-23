@@ -1,4 +1,4 @@
-# V2.1 Identity, Skin, Light, Tone, Capture, and Optics Validation
+# V2.2 Identity, Skin, Light, Tone, Capture, and Optics Validation
 
 ## Contents
 
@@ -103,10 +103,15 @@ At normal size, skin must read clean, continuous, and dimensional before any mic
 - Lighting may change luminance/reflection but may not move feature boundaries or sculpt the face through localized line darkening.
 - Default/ambiguous relight should use E1 with luminous midtones. E5 shadow loss passes only when explicitly selected; E6 requires A6; E7 requires direct-flash intent.
 - A6 requires E6, `fill_policy: none`, and one black interior; any internal feature, skin color, catchlight, lit hair, garment texture, or accessory shading fails.
+- A7 passes only when a few ordered spectral bands remain tied to one source and bend across real surfaces; floating rainbow patches or a global tint fail.
+- A8 passes only when repeated bands share direction, spacing, perspective, edge hardness, and continuity across subject and adjacent surfaces.
+- L13/T8 requires rapid near-field falloff, weak warm bounce, and clean deep surroundings; a uniform orange face or room fails.
+- L14 requires a narrow continuous rear-quarter rim with restrained fill; a halo entering the face or unrelated edge glow fails.
+- A9 requires gravity-consistent rain and key-facing wet reflections; random droplets, whole-face oiliness, or reflections with a second direction fail.
 
 ## Tone, Grade, and Capture Gate
 
-Compare the result with the selected E/G/D definitions in [the V2.1 tone and capture recipes](tone-exposure-style-device-recipes.md).
+Compare the result with the selected E/G/D definitions in [the V2.2 tone and capture recipes](tone-exposure-style-device-recipes.md).
 
 | Layer | Pass | Fail |
 | --- | --- | --- |

@@ -1,4 +1,4 @@
-# V2.1 Compact Prompt Compiler
+# V2.2 Compact Prompt Compiler
 
 ## Contents
 
@@ -62,6 +62,10 @@ If the user names a camera brand without describing an effect, route it to the n
 | 35mm negative | Gentle highlight compression, softer microcontrast, restrained film color; grain only when requested. |
 | Point-and-shoot flash | One on-axis flash, compact highlights, clear subject exposure, rapid ambient falloff, casual framing retained. |
 | Golden hour | Side-backlight defines hair/shoulders; exposure protects the rim, face follows available bounce, background carries the same warm direction. |
+| Prism glow | A few source-aligned spectral bands refract across curved surfaces with ordered dispersion; they are light, not painted color. |
+| Blind shadows | Parallel bands share one vanishing direction and edge hardness, bend across the subject, and continue onto nearby surfaces. |
+| Candlelight | One low near-field flame produces amber highlights, rapid distance falloff, weak warm bounce, and deep clean surroundings. |
+| Rain-wet low key | Rain and wet highlights appear only where the key reaches them; droplets follow gravity and reflections inherit scene color. |
 
 ## Production Prompts
 
@@ -140,6 +144,42 @@ EDIT: Relight this portrait; retain source identity, facial proportions, feature
 LIGHT: Place warm sunset light behind and to one side, outlining hair and shoulders. Expose for the rim; derive camera-facing brightness from natural reflected fill, and align background warmth, long shadows, and one restrained flare with the source.
 SKIN: Keep illuminated complexion continuous with bounded warm reflections and focus-aware regional detail.
 AVOID: facial redesign, global orange wash, or detached halos.
+```
+
+### Prism Glow
+
+```text
+EDIT: Relight this portrait; retain source identity, geometry, expression, pose, camera view, focal plane, depth of field, and framing.
+LIGHT: Use one soft side-backlight refracted through a prism into a few low-opacity spectral bands across the face and a nearby surface. Keep ordered color dispersion, source direction, curvature, and highlight headroom coherent.
+SKIN: Preserve continuous source complexion beneath bounded refracted light and retain only scale-resolved regional detail.
+AVOID: painted rainbow patches, full-frame color wash, or identity drift.
+```
+
+### Blind-Shadow Lines
+
+```text
+EDIT: Relight this portrait; retain source identity, facial geometry, expression, pose, camera view, optics, framing, and scene structure.
+LIGHT: Project one hard side source through blinds as parallel light-and-shadow bands. Keep spacing, direction, edge hardness, and perspective consistent; bend the bands across facial and clothing curvature and continue them onto the adjacent wall. Expose lit facial planes clearly while unlit planes recede to a clean black point.
+SKIN: Keep lit skin clean with restrained highlights and focus-aware detail.
+AVOID: flat graphic overlays, random stripes, or crushed features.
+```
+
+### Candlelit Low Key
+
+```text
+EDIT: Relight this portrait; retain source identity, geometry, expression, pose, camera view, focal plane, depth of field, and composition.
+LIGHT: Use one visible or implied candle below camera-left as the dominant near-field key. Let amber-gold light rise across the face and hands, fall off rapidly into deep clean surroundings, and leave only weak warm room bounce and one flame-consistent catchlight.
+SKIN: Preserve continuous complexion with compact flame-facing highlights and scale-resolved detail.
+AVOID: global orange wash, uniform facial glow, or bright ambient fill.
+```
+
+### Cool Rain-Wet Low Key
+
+```text
+EDIT: Relight this portrait into a rain-wet night scene; retain source identity, facial geometry, expression, pose, camera view, focal plane, depth of field, and framing.
+LIGHT: Use one cool side key with low-key exposure; keep selected facial planes readable and dark regions clean. Rain streaks, droplets, wet hair, clothing, and background reflections inherit its direction, color, and falloff.
+SKIN: Keep complexion coherent beneath sparse key-facing wet highlights and focus-resolved detail.
+AVOID: oily whole-face gloss, random droplets, or blue color wash.
 ```
 
 ### A6 Full-Black Silhouette

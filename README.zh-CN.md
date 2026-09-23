@@ -8,13 +8,13 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.1.0-black?style=flat-square" alt="Version 2.1.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
 </p>
 
 [English](README.md) | 简体中文 | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 
-`xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。V2.1 将物理光源、曝光分配、色调风格、拍摄设备响应、皮肤整体色调、局部反射及随尺度与焦点变化的微纹理分开控制。
+`xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。V2.2 将物理光源、曝光分配、色调风格、拍摄设备响应、皮肤整体色调、局部反射及随尺度与焦点变化的微纹理分开控制。
 
 它强调改变光影，而不是重画人物：保持同一人物、原有五官结构与比例、自然轻微不对称、表情、姿势、镜头和构图；避免塑料皮、颗粒皮、脏灰色差和靠加深皱褶制造的假立体。
 
@@ -30,7 +30,8 @@
 - 保留原有唇纹、眼周层次、克制皮脂反光与尺度相符的微纹理；
 - 修复逆光、室内窗光割裂、平光、非预期死黑和无来源高光；
 - 支持柔和窗光、商业柔光、伦勃朗光、低调电影光、黄金时刻、双色霓虹和斜向硬光；
-- 可加入一种物理一致的窗影、树影、背景 Bokeh、夕阳光晕、轻微体积光或主体全黑逆光剪影；
+- 可加入一种物理一致的棱镜色散、百叶/格栅条纹光影、雨夜湿面反射、窗影、树影、Bokeh、夕阳光晕、体积光或主体全黑剪影；
+- 新增烛火近场主光和轮廓光主导的人像配方，明确距离衰减、边缘落点与补光强度；
 - 主体与背景分层控制：先定义主光与曝光意图，再定义 Fill、阴影、背景环境光和色温；
 - 保持人物身份、五官大小与位置、表情、姿势、服装、背景结构和原画幅；
 - 面部较小时自动降低微纹理目标，但不会因此取消用户指定的光影变化；
@@ -63,7 +64,7 @@ AVOID: Only two or three source-specific failures.
 
 不会把身份审计、物体清单、同义负向词和多套摄影风格全部堆进提示，以免互相抵消或直接复制原图。
 
-仅修皮肤时，V2.1 强制使用 `L0 + E0 + T0 + G0 + D0 + A0`。色调校正只改变 E/T/G；设备模拟只改变 G/D 及必要的 E；重照明改变 L/E/T/A。除非明确要求 `optical-restyle`，原机位、透视、裁切、焦平面和景深均保持不变。
+仅修皮肤时，V2.2 强制使用 `L0 + E0 + T0 + G0 + D0 + A0`。色调校正只改变 E/T/G；设备模拟只改变 G/D 及必要的 E；重照明改变 L/E/T/A。除非明确要求 `optical-restyle`，原机位、透视、裁切、焦平面和景深均保持不变。
 
 `A6` 强制使用 E6 剪影曝光，把有效主光移到人物后方，取消全部补光与眼神光，并让人物内部落为全黑。L/T 及 G/D 处理只作用于背光和背景，S/P 均停用。
 
@@ -92,6 +93,8 @@ AVOID: Only two or three source-specific failures.
 | `L10` | 黄金时刻夕阳侧逆光 |
 | `L11` | 赛博朋克青/洋红双色霓虹 |
 | `L12` | 商业极简均匀柔光 |
+| `L13` | 距离衰减明显的烛火/火焰近场主光 |
+| `L14` | 轮廓光主导、正面补光克制的戏剧人像光 |
 
 ### 曝光 E
 
@@ -138,6 +141,7 @@ AVOID: Only two or three source-specific failures.
 | `T5` | 阴天或蓝调时刻的冷中性光，不形成全局蓝罩 |
 | `T6` | 暖钨丝实景灯，色彩随距离自然衰减 |
 | `T7` | 日光与室内实景灯混合平衡，保护肤色和中性物体 |
+| `T8` | 烛火琥珀暖色，暖度随距离衰减，阴影保持中性深色 |
 
 ### 色调风格 G
 
@@ -178,6 +182,22 @@ AVOID: Only two or three source-specific failures.
 | `A4` | 夕阳方向一致的轻柔镜头光晕 |
 | `A5` | 极轻体积光与稀疏微尘 |
 | `A6` | 强制整个人物成为干净的逆光全黑剪影，内部不显示五官、肤色、发丝或衣物细节 |
+| `A7` | 少量沿主光方向出现的棱镜光谱条带或焦散光斑 |
+| `A8` | 符合投影透视的百叶/格栅明暗条纹 |
+| `A9` | 雨滴遵循重力、湿面反光服从主光方向的雨夜氛围 |
+
+### 提取的光影预设
+
+| 效果 | 配方 |
+| --- | --- |
+| 棱镜彩虹光 | `L1/L4 + E2 + Sx + P2 + T1 + G1 + D1 + A7` |
+| 窗影条纹光 | `L6 + E5 + Sx + P3 + T1/T2 + G1/G4 + D1 + A8` |
+| 烛火低调光 | `L13 + E5 + Sx + P6 + T8 + G3/G4 + D1 + A0/A3` |
+| 霓虹城市光 | `L11 + E5 + Sx + P6 + T4 + G4 + D1 + A3/A9` |
+| 金色暮光 | `L10 + E2 + Sx + P2 + T2 + G0/G1 + D0/D1 + A4` |
+| 柔和晨窗光 | `L2 + E1 + Sx + P2 + T1/T2 + G0/G1 + D0/D2 + A0/A1` |
+| 轮廓光戏剧人像 | `L14 + E2/E5 + Sx + P3 + T2/T3 + G1/G4 + D1 + A0/A5` |
+| 冷调雨夜低调光 | `L4/L11 + E5 + Sx + P6 + T5/T4 + G3/G4 + D1 + A9` |
 
 详细提示句见[光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)。
 

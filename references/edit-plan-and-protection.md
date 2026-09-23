@@ -1,4 +1,4 @@
-# V2.1 Strict Local Edit Plan and Protection Gate
+# V2.2 Strict Local Edit Plan and Protection Gate
 
 Use this file only with a verified `strict-local` backend. Follow [the backend contract](backend-and-clean-realism.md) for delivery mode and invocation evidence. If strict capability is missing, continue as `best-effort`; do not create a fictional freeze plan.
 

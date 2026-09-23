@@ -2,6 +2,20 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
+## [2.2.0] - 2026-09-23
+
+### Added
+
+- Added `L13` candle/flame near-field lighting and `L14` rim-led dramatic portrait lighting.
+- Added `T8` candle/flame amber response with distance-based warmth decay.
+- Added `A7–A9` atmosphere recipes for prism refraction, blind/lattice shadow lines, and rain-wet low-key response.
+- Added compact production prompts and stable combinations for prism glow, shadow lines, candlelight, neon city, golden twilight, soft morning window light, rim-led drama, and cool rain-wet portraits.
+
+### Changed
+
+- Compiled the supplied visual references into physical source direction, projection geometry, tonal placement, surface response, and falloff instead of copying generic quality or mood labels.
+- Required refracted color, projected shadows, flame illumination, rim highlights, rain, and wet reflections to inherit the selected key light and exposure.
+
 ## [2.1.0] - 2026-09-07
 
 ### Added

@@ -1,4 +1,4 @@
-# V2.1 Lighting, Skin, Finish, Color, and Atmosphere Recipes
+# V2.2 Lighting, Skin, Finish, Color, and Atmosphere Recipes
 
 ## Contents
 
@@ -12,7 +12,7 @@ Choose exactly `one L + one E + one S + one P + one T + one G + one D + zero or 
 - Define one key by direction, apparent size, landing area, and falloff. Select E from [the tone/exposure/device reference](tone-exposure-style-device-recipes.md) before fill.
 - Make skin finish inherit the key; never add an independent gloss or texture layer.
 - Preserve source focal plane and depth of field. Detail visibility must follow scale, focus, distance, and illumination.
-- Use at most one atmosphere. A1–A5 inherit the key; A6 overrides exposure and suppresses S/P.
+- Use at most one atmosphere. A1–A5 and A7–A9 inherit the key; A6 overrides exposure and suppresses S/P.
 
 ## Operation Scope
 
@@ -44,8 +44,13 @@ Default to E0 for preservation and E1 for natural relighting. E5/E6/E7 require a
 | Cinematic warm/cool low-key | `L9 + E5 + Sx + P3 + T3 + G4 + D1 + A0/A5` |
 | Golden hour | `L10 + E2 + Sx + P2 + T2 + G0/G1 + D0/D1 + A4` |
 | Full-black silhouette | `Lx + E6 + Sx + Px + Tx + Gx + Dx + A6` |
-| Cyberpunk neon | `L11 + E5 + Sx + P6 + T4 + G4 + D1 + A3` |
+| Neon city | `L11 + E5 + Sx + P6 + T4 + G4 + D1 + A3/A9` |
 | Clean commercial high-key | `L12 + E4 + Sx + P5 + T1 + G2 + D1/D2 + A0` |
+| Prism glow | `L1/L4 + E2 + Sx + P2 + T1 + G1 + D1 + A7` |
+| Blind or lattice shadow lines | `L6 + E5 + Sx + P3 + T1/T2 + G1/G4 + D1 + A8` |
+| Candlelit low key | `L13 + E5 + Sx + P6 + T8 + G3/G4 + D1 + A0/A3` |
+| Sculpted rim drama | `L14 + E2/E5 + Sx + P3 + T2/T3 + G1/G4 + D1 + A0/A5` |
+| Cool rain-wet low key | `L4/L11 + E5 + Sx + P6 + T5/T4 + G3/G4 + D1 + A9` |
 
 ## Key-Light Recipes L
 
@@ -64,6 +69,8 @@ Default to E0 for preservation and E1 for natural relighting. E5/E6/E7 require a
 | L10 Golden-hour side backlight | Place one warm sunset source behind and to one side, outlining hair and shoulders. Derive camera-facing illumination from natural reflected fill and align background direction and long shadows; pair with E2. |
 | L11 Dual-tone neon | Use one colored side key and one weaker opposite-rear rim with distinct directions. Keep saturation controlled and restrict each color to illuminated planes rather than washing the full face. |
 | L12 Minimal high-key soft light | Use one large top-front diffused source with slight frontal fill, broad source-shaped highlights, soft directional shadows, and nonflat separation; pair with E4 for high key. |
+| L13 Candle or flame key | Use one visible or strongly implied flame below and to one side as the dominant near-field source. Let amber light fall off rapidly across face, hands, clothing, and room; retain only weak warm bounce and one flame-consistent catchlight. Pair with E5 and T8. |
+| L14 Rim-led dramatic portrait | Place one strong rear-quarter source to draw a narrow continuous rim along source-facing hair, shoulder, and garment edges. Use only weak broad camera-side fill when facial readability is requested; keep the rim outside facial interiors and align background spill with the source. |
 
 ## Skin Scale Recipes S
 
@@ -102,6 +109,9 @@ A whole-face gloss layer fails every P. A fully dead-matte result also fails unl
 | A4 Sunset flare | Add one restrained flare aligned with the sunset source. Permit slight bloom only near that source, never across the full frame or face. |
 | A5 Volumetric light | Add faint source-aligned haze only where a visible or strongly inferred beam crosses air/background; do not veil the subject or add decorative dust. |
 | A6 Full-black silhouette | Place the subject against one bright rear source or luminous background with no fill, catchlight, or internal illumination. Render the entire subject interior black while retaining outline, proportions, pose, and placement. |
+| A7 Prism refraction | Refract one existing key through a prism, faceted glass, or crystal into a few soft spectral bands or caustic patches. Preserve ordered color dispersion, source direction, curvature, and falloff across skin and nearby surfaces; never create floating rainbow stickers or a full-frame color wash. |
+| A8 Blind/lattice shadow lines | Project one hard directional source through blinds, slats, or lattice as repeated parallel light-and-shadow bands. Keep spacing, perspective, edge hardness, and direction coherent; bend bands across facial/clothing curvature and continue them onto an adjacent surface. |
+| A9 Rain-wet atmosphere | Add source-lit rain, gravity-consistent droplets, and narrow wet reflections on hair, skin, clothing, and ground only where the selected key reaches them. Keep dark regions clean, avoid whole-face oiliness, and let background reflections inherit the scene colors and depth of field. |
 
 ### A6 Override
 
@@ -122,6 +132,7 @@ A whole-face gloss layer fails every P. A fully dead-matte result also fails unl
 | T5 Cool overcast or blue hour | Use cool-neutral ambient light with preserved skin neutrality, smooth sky-to-subject color continuity, and no full-frame blue wash. |
 | T6 Tungsten practical | Keep visible tungsten sources warm and let their color decay with distance; retain believable skin hue and neutral reference separation. |
 | T7 Mixed-light balance | Preserve distinct daylight and practical-light regions while neutralizing only conflicting casts on skin and nominally neutral objects. |
+| T8 Candle/flame amber | Keep directly flame-lit planes amber-gold, let warmth decay rapidly with distance, retain neutral-to-deep shadows, and avoid a global orange or sepia wash. |
 
 ## Optional Control Clauses
 

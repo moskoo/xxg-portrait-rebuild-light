@@ -1,4 +1,4 @@
-# V2.1 Backend Capability and Clean Realism
+# V2.2 Backend Capability and Clean Realism
 
 ## Delivery Modes
 
@@ -56,7 +56,7 @@ Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are no
 
 For full-frame edits, separate `structural_invariants`, `authorized_appearance_changes`, and one `minimum_visible_improvement` observable at normal size. An almost unchanged result cannot pass as restrained processing.
 
-## V2.1 Clean Optical Realism
+## V2.2 Clean Optical Realism
 
 | Signal | Pass | Fail |
 | --- | --- | --- |
@@ -106,3 +106,7 @@ Off-camera window confidence: `high` requires a visible window or at least three
 | Tone becomes flat or globally tinted | Replace E/G with explicit tonal-zone placement, neutral references, skin-hue protection, saturation relationship, and one curve. |
 | Device style is absent or changes optics | Replace the name with D capture behavior and restore source viewpoint/crop/focus/DOF. |
 | A6 retains interior detail or gray fill | Remove S/P, fill, catchlights, and subject lighting; require one continuous black interior. |
+| Prism effect looks painted | Reduce to a few ordered spectral bands; align them with one refracted source and surface curvature. |
+| Blind shadows look like an overlay | Restore one projection direction, repeated spacing, edge hardness, perspective, and continuation onto a nearby surface. |
+| Candlelight becomes orange fill | Keep one low near-field flame, rapid falloff, weak bounce, and a neutral-deep black point. |
+| Rain/wet effect dirties skin | Restrict droplets and wet highlights to gravity and key-facing planes; restore clean continuous complexion elsewhere. |

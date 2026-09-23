@@ -1,4 +1,4 @@
-# V2.1 Tone, Exposure, Look, and Capture Recipes
+# V2.2 Tone, Exposure, Look, and Capture Recipes
 
 ## Contents
 

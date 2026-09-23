@@ -1,9 +1,9 @@
 ---
 name: xxg-portrait-rebuild-light
-description: "Edit an existing JPG, JPEG, PNG, or WebP portrait to rebuild physically coherent light, exposure, color, capture style, and clean optical skin realism without changing the person. Use for plastic-skin or AI-look removal, tone or white-balance correction, camera/film/device emulation, natural fill, backlight correction, window or tree shadows, bokeh, golden-hour light, neon, studio light, low-key beams, or full-black silhouettes."
+description: "Edit an existing JPG, JPEG, PNG, or WebP portrait to rebuild physically coherent light, exposure, color, capture style, and clean optical skin realism without changing the person. Use for plastic-skin or AI-look removal, tone or white-balance correction, camera/film/device emulation, backlight, prism refraction, blind shadows, candlelight, neon, golden-hour or rim light, rain-wet low key, studio light, or full-black silhouettes."
 ---
 
-# XXG Portrait Rebuild Light V2.1
+# XXG Portrait Rebuild Light V2.2
 
 ## Objective
 
@@ -60,7 +60,7 @@ Do not use Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, or custom raster 
 
 ## Compile the Image Prompt
 
-Read [the V2.1 prompt compiler](references/prompt-recipes.md), [the lighting and skin recipes](references/lighting-skin-color-temperature-recipes.md), and [the tone/exposure/style/device recipes](references/tone-exposure-style-device-recipes.md). Decide internally as:
+Read [the V2.2 prompt compiler](references/prompt-recipes.md), [the lighting and skin recipes](references/lighting-skin-color-temperature-recipes.md), and [the tone/exposure/style/device recipes](references/tone-exposure-style-device-recipes.md). Decide internally as:
 
 ```text
 Scope → Key L → Exposure E → Fill/Shadow → Skin scale S → Skin finish P → Light color T → Look G → Capture D → Background/Atmosphere A
@@ -116,6 +116,7 @@ Under A6, internal features are intentionally hidden. Judge identity from hair/h
 - Add fill only when the selected exposure requires information to remain readable. Do not flatten intended backlight, hard light, low-key, or silhouette.
 - Derive shadow edge from apparent source size and distance. Carry direction, falloff, cast shadows, and reflected color across subject, clothing, nearby surfaces, and background.
 - Keep window/tree shadows continuous across curvature and adjacent surfaces; keep bokeh only in optically defocused regions; require a visible or strongly inferred source for rays; give neon a clear primary and secondary source.
+- Treat prism color as refraction of one existing source, not painted rainbow patches. Give blind/lattice shadows one projection geometry, candlelight rapid near-field falloff, rim light a continuous rear-quarter outline, and rain-wet highlights the same direction as the key.
 - Under A6, render the complete subject interior as one clean black mass. Permit only a narrow source-consistent rim that does not enter the silhouette.
 
 ## Apply Tone and Capture Style Precisely
@@ -139,7 +140,7 @@ Accept relative aspect-ratio drift of `≤5%`. Never resize, crop, pad, or exten
 
 ## Validate the Result
 
-After generation, read [the V2.1 identity and detail audit](references/identity-and-detail-audit.md). At normal size first, verify:
+After generation, read [the V2.2 identity and detail audit](references/identity-and-detail-audit.md). At normal size first, verify:
 
 1. the requested lighting/tone/capture change—or exact preservation of every unauthorized axis—is immediately clear;
 2. identity signature, pose, source optics, framing, and subject scale remain stable;
