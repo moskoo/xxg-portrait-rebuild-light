@@ -17,10 +17,7 @@
 
 인물을 다시 그리는 것이 아니라 조명을 바꾸는 데 중점을 둡니다. 동일 인물, 기존 얼굴 구조와 비율, 자연스러운 미세 비대칭, 표정, 자세, 카메라 시점, 구도를 유지하며 플라스틱 피부, 거친 입자 피부, 지저분한 색 얼룩, 주름을 과장해 만든 가짜 입체감을 방지합니다.
 
-![演示图片](/assets/skill-demo1.jpg "skill-demo")
-![演示图片](/assets/skill-demo2.jpg "skill-demo")
-![演示图片](/assets/skill-demo3.jpg "skill-demo")
-![演示图片](/assets/skill-demo4.jpg "skill-demo")
+![演示图片](/assets/lightv2.jpg "skill-demo")
 
 ## 주요 기능
 
@@ -42,6 +39,12 @@
 - 별도 API 없이 현재 에이전트가 보유한 이미지 생성·편집 기능을 기본으로 사용합니다.
 - 현재 에이전트에 image edit 기능이 없거나 결과가 목표에 미달하면 완전하고 간결한 image edit 프롬프트를 직접 출력합니다.
 - Pillow, NumPy, OpenCV, ImageMagick 또는 임시 필터 스크립트로 최종 이미지를 만들지 않습니다.
+
+![演示图片](/assets/skill-demo1.jpg "skill-demo")
+![演示图片](/assets/skill-demo2.jpg "skill-demo")
+![演示图片](/assets/skill-demo3.jpg "skill-demo")
+![演示图片](/assets/skill-demo4.jpg "skill-demo")
+
 
 ## 핵심 방식
 
