@@ -2,6 +2,21 @@
 
 Notable changes to `xxg-portrait-rebuild-light` are recorded here. This project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/).
 
+## [2.3.0] - 2026-10-09
+
+### Added
+
+- Added `Q0–Q6` clean-frame recipes for repeating synthetic dirt/grid artifacts, tonal and chroma banding, local edit seams, root-base color lock, and cumulative multi-round degradation.
+- Added `quality-repair`, `base-color-repair`, and `multi-round-repair` scopes plus compact production prompts for each workflow.
+- Added current-edit/root-base reference roles, semantic target/interaction/protected zones, quality validation, and failure-specific retries.
+
+### Changed
+
+- Multi-round edits now keep the first root base as the permanent identity, geometry, color, and clean-texture reference; intermediate raw rounds are not generation references.
+- Color repair applies only to unchanged or unauthorized regions and explicitly preserves intended recolors and selected E/T/G/A behavior.
+- Quality cleanup distinguishes synthetic residue from pores, hair, directional fibers, fabric weave, real edges, shadow boundaries, and focus falloff.
+- Reaffirmed that the Skill uses the host's native image editor only; prompt constraints do not claim pixel locks, and local Pillow/NumPy/OpenCV filters never produce the delivered image.
+
 ## [2.2.0] - 2026-09-23
 
 ### Added

@@ -1,4 +1,4 @@
-# V2.2 Compact Prompt Compiler
+# V2.3 Compact Prompt Compiler
 
 ## Contents
 
@@ -6,47 +6,52 @@
 
 ## Output Contract
 
-Describe one final photograph, not a conversation about editing. Use four lines when source color/capture remain unchanged; add RENDER only for a requested grade or device response.
+Describe one final photograph, not a conversation about editing. Use four lines when source color/capture/quality remain unchanged; add RENDER only for a requested grade or device response and QUALITY only for an observed repair target.
 
 ```text
 EDIT: {scope}; retain source identity, geometry, expression, pose, camera view, focal plane, depth of field, framing, and every unauthorized axis.
 LIGHT: {L + E: source, direction, landing area, highlight/midtone/shadow/black behavior, environment response} {T} {optional A}.
 RENDER: {G palette/curve + D capture response}; preserve source perspective and optics. [Omit for G0 + D0.]
 SKIN: {S + P}; continuous source complexion, bounded key-shaped reflection, and regional detail limited by scale/focus/light.
+QUALITY: {one Q repair}; preserve natural detail and every unauthorized axis. [Omit for Q0.]
 AVOID: {only two or three source-specific failures}.
 ```
 
 - Target `55–110` English words. Combined relight plus capture-style prompts may reach `135`; never exceed it.
-- Select `one L + one E + one S + one P + one T + one G + one D + zero or one A` and copy behavior, never codes.
+- Select `one L + one E + one S + one P + one T + one G + one D + zero or one A + one Q` and copy behavior, never codes.
 - State identity once. The attached source is the identity card; do not redescribe attractiveness, age, facial style, or imagined camera settings.
 - Put positive, visible behavior first. Keep AVOID short and source-specific.
 - On retry, replace the failed layer. Never append a second lighting setup, color look, device, or defect list.
 
 ### A6 Override
 
-For A6, force E6. Remove subject-facing light, fill, catchlights, and internal highlights. Use L/T only for the rear source/background, suppress S/P, and write: `The entire subject interior is one continuous black silhouette; retain only the original outline, proportions, pose, and placement.` G/D may affect only the background.
+For A6, force E6. Remove subject-facing light, fill, catchlights, and internal highlights. Use L/T only for the rear source/background, suppress S/P, and write: `The entire subject interior is one continuous black silhouette; retain only the original outline, proportions, pose, and placement.` G/D may affect only the background. Q may clean the background but must not reveal or reconstruct the silhouette interior.
 
 ## Scope First
 
 | User intent | Required compilation |
 | --- | --- |
-| Skin realism only | `texture-only`; force `L0 + E0 + T0 + G0 + D0 + A0`; preserve source light, color, exposure, capture, focus, and scene. |
+| Skin realism only | `texture-only`; force `L0 + E0 + T0 + G0 + D0 + A0 + Q0`; preserve source light, color, exposure, capture, focus, and scene. |
 | Brightness, dynamic range, white balance, or grade only | `tone-and-exposure`; preserve L and source geometry/optics; change only requested E/T/G axes. |
 | New lighting | `relight-and-skin`; apply L/E/T/A across subject and environment; preserve geometry and source optics. |
 | Camera, film, phone, CCD, or era feel | `capture-style`; change G/D and only the E response the capture logically requires; preserve viewpoint/crop/focus/DOF. |
 | New angle, focal perspective, aperture, or DOF | `optical-restyle`; state the requested optical consequence and allow only the reconstruction it requires. |
+| Dirty pattern, banding, posterization, seam, or halo | `quality-repair`; preserve L/E/T/G/D/A and change only the selected Q behavior. |
+| Unintended cast after editing | `base-color-repair`; use current edit as target and root base as color reference; preserve intended recolors and authorized E/T/G/A. |
+| Repeated-edit degradation | `multi-round-repair`; use current accepted edit plus root base, not the intermediate chain; consolidate accepted changes once. |
 
 Ambiguous “make it cinematic/editorial/professional” requests are not permission to relight, recolor, and change optics together. Choose the smallest axis that produces the requested visible result.
 
 ## Layer Compilation
 
-Read [lighting/skin recipes](lighting-skin-color-temperature-recipes.md) and [tone/exposure/style/device recipes](tone-exposure-style-device-recipes.md).
+Read [lighting/skin recipes](lighting-skin-color-temperature-recipes.md), [tone/exposure/style/device recipes](tone-exposure-style-device-recipes.md), and [quality/iteration recipes](quality-repair-and-iteration.md).
 
 1. **EDIT** — scope and invariant photograph structure.
 2. **LIGHT** — one physical L, one E tonal placement, one T source-color relationship, and optional A. Explicitly place highlights, midtones, shadows, and black point.
 3. **RENDER** — one G palette/curve and one D capture response. Translate a camera name into tonal steps, highlight roll-off, color separation, microcontrast, sharpening, and dynamic range.
 4. **SKIN** — one S scale plus one P reflection finish. D noise/grain never acts as skin texture.
-5. **AVOID** — only failures not already prevented positively.
+5. **QUALITY** — one Q repair only when an observed artifact exists. Separate synthetic residue from natural detail and preserve every unauthorized axis.
+6. **AVOID** — only failures not already prevented positively.
 
 If the user names a camera brand without describing an effect, route it to the nearest device class and omit invented manufacturer color science. If the user supplies a film stock or exact look, retain the name once and still state its visible behavior.
 
@@ -62,6 +67,11 @@ If the user names a camera brand without describing an effect, route it to the n
 | 35mm negative | Gentle highlight compression, softer microcontrast, restrained film color; grain only when requested. |
 | Point-and-shoot flash | One on-axis flash, compact highlights, clear subject exposure, rapid ambient falloff, casual framing retained. |
 | Golden hour | Side-backlight defines hair/shoulders; exposure protects the rim, face follows available bounce, background carries the same warm direction. |
+| Dirty AI texture | Remove only repeating synthetic cellular/grid/chroma residue; retain directional fibers, pores, hair, edges, and focus falloff. |
+| Banding/posterization | Restore continuous luminance and chroma roll-off while preserving real object and cast-shadow edges. |
+| Edit seam | Match boundary light, white balance, sharpness, noise, depth, haze, shadow, and reflection without global blur. |
+| Color drift | Anchor unchanged/unauthorized regions to the root base while preserving intentional new colors and requested E/T/G/A. |
+| Multi-round degradation | Keep accepted current changes once; rebuild clean continuity from current target plus root identity/color/texture hierarchy. |
 | Prism glow | A few source-aligned spectral bands refract across curved surfaces with ordered dispersion; they are light, not painted color. |
 | Blind shadows | Parallel bands share one vanishing direction and edge hardness, bend across the subject, and continue onto nearby surfaces. |
 | Candlelight | One low near-field flame produces amber highlights, rapid distance falloff, weak warm bounce, and deep clean surroundings. |
@@ -182,6 +192,46 @@ SKIN: Keep complexion coherent beneath sparse key-facing wet highlights and focu
 AVOID: oily whole-face gloss, random droplets, or blue color wash.
 ```
 
+### Clean Synthetic Noise and Banding
+
+```text
+EDIT: Repair generation quality only; retain source identity, geometry, expression, pose, light, color, camera view, focal plane, depth of field, framing, and objects.
+LIGHT: Preserve the photographed exposure, highlight map, shadows, white balance, and background response.
+SKIN: Preserve source reflectance and scale-resolved regional detail.
+QUALITY: Remove repeating cellular/grid residue and visible tonal bands only where present; restore clean continuous gradients while retaining pores, hair, directional fabric fibers, true edges, shadow boundaries, and natural focus falloff.
+AVOID: global smoothing, invented texture, or a new grade.
+```
+
+### Local Edit-Seam Repair
+
+```text
+EDIT: Repair only the visible local edit boundary; retain source identity, geometry, pose, framing, surrounding structures, and the intended edited object.
+LIGHT: Preserve the existing source direction, exposure, shadow placement, white balance, and reflections.
+SKIN: Preserve source complexion and detail hierarchy where visible.
+QUALITY: Match boundary exposure, color, saturation, microcontrast, sharpness, noise character, depth of field, haze, shadow softness, and reflection strength; retain legitimate contact effects inside the interaction area.
+AVOID: rectangular seams, halos, cutout edges, or boundary-wide blur.
+```
+
+### Root-Base Color Repair
+
+```text
+EDIT: Image 1 is the current edit target; Image 2 is the original root reference. Retain Image 1's intended content changes and Image 2's identity, geometry, framing, and unchanged color relationships.
+LIGHT: Preserve every authorized relight and exposure change already present in Image 1.
+SKIN: Restore source-consistent skin hue without changing facial detail or reflectance.
+QUALITY: In unchanged or unauthorized regions, match Image 2's neutrals, whites, darks, saturation relationships, and lightness curve; preserve deliberate new colors and requested grading.
+AVOID: global recolor, magenta/green compensation cast, or rollback of intended changes.
+```
+
+### Multi-Round Quality Consolidation
+
+```text
+EDIT: Image 1 is the latest accepted edit target; Image 2 is the original root base. Preserve every intended change in Image 1 once, while retaining Image 2's identity, geometry, framing, and clean unchanged structure.
+LIGHT: Keep Image 1's authorized light, exposure, atmosphere, and shadows.
+SKIN: Use Image 2's clean detail hierarchy and Image 1's accepted lighting response.
+QUALITY: Remove accumulated color drift, synthetic noise, repeated texture, sharpening halos, compression residue, banding, and seam buildup; return one coherent current frame.
+AVOID: intermediate-state blending, global smoothing, or undoing accepted edits.
+```
+
 ### A6 Full-Black Silhouette
 
 ```text
@@ -229,6 +279,8 @@ Do not put these shortcuts in a default generation prompt; compile the observabl
 | oily/dewy/wet skin | `small bounded specular highlights on key-facing convexities` |
 | raw/coarse/gritty texture | `fine low-amplitude optical microdetail` |
 | 8K, ultra-detailed, crisp everywhere | `detail follows source scale, focal plane, distance, and illumination` |
+| clean up / denoise everything | Name one observed Q defect and preserve natural directional texture, edges, and focus hierarchy. |
+| keep colors unchanged | Anchor only unchanged/unauthorized regions to the root base and exempt intended E/T/G/A changes. |
 
 ## Replace One Failed Layer
 
@@ -243,6 +295,12 @@ Do not put these shortcuts in a default generation prompt; compile the observabl
 | Plastic skin remains | Replace SKIN with continuous source complexion, bounded source-shaped highlights, and faint focus-aware regional detail. |
 | Film look dirties skin | Remove grain/cast/imperfection terms; keep G/D tone response and let S/P define skin. |
 | A6 retains interior detail | Remove S/P and all subject light; require one continuous black interior. |
+| Synthetic dirt remains | Replace QUALITY with Q1 behavior naming the affected material/location; preserve directional natural texture. |
+| Surface becomes waxy | Restore pores/fibers/hair/edges and focus falloff; remove global denoise or smoothing language. |
+| Gradient still breaks | Replace QUALITY with Q2 behavior for the affected gradient while protecting real edges and black point. |
+| Seam remains visible | Replace QUALITY with Q3 boundary rendering attributes; do not add blur. |
+| Color repair removes the requested look | Restrict Q4 to unchanged/unauthorized regions and exempt the authorized E/T/G/A axes. |
+| Later edits keep degrading | Use current edit plus root base only and replace QUALITY with Q5 consolidation; omit intermediate references. |
 
 ## Forbidden Prompt Construction
 
@@ -254,3 +312,7 @@ Do not put these shortcuts in a default generation prompt; compile the observabl
 - grain, noise, sharpening, or imperfections used as skin detail;
 - competing key lights or a grade that recolors the full face;
 - A6 combined with visible subject texture, catchlights, fill, or clothing detail.
+- generic denoise, global smoothing, or sharpening used instead of a named Q repair;
+- color-locking an intentional global grade, relight, monochrome conversion, or recolor;
+- using the previous raw round as the root color reference or attaching the full edit history;
+- claiming prompt wording provides pixel-identical protection.

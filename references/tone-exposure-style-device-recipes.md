@@ -1,4 +1,4 @@
-# V2.2 Tone, Exposure, Look, and Capture Recipes
+# V2.3 Tone, Exposure, Look, and Capture Recipes
 
 ## Contents
 
@@ -21,7 +21,7 @@ Use one E, one G, and one D. Do not combine competing camera systems, eras, colo
 
 | Scope | Authorized change | Locked by default |
 | --- | --- | --- |
-| `texture-only` | Skin reflectance and scale-resolved microdetail | `L0 + E0 + T0 + G0 + D0 + A0`; all source light, color, exposure, optics, and scene content |
+| `texture-only` | Skin reflectance and scale-resolved microdetail | `L0 + E0 + T0 + G0 + D0 + A0 + Q0`; all source light, color, exposure, optics, quality behavior, and scene content |
 | `tone-and-exposure` | E, T, and G only | Light direction/source size, identity, geometry, camera view, focal plane, depth of field, objects, and background structure |
 | `relight-and-skin` | L, E, T, S, P, optional G/D/A | Identity, geometry, camera position, focal plane, depth of field, framing, and scene structure |
 | `capture-style` | G and D; E only when the requested capture logically requires it | Physical light direction, identity, geometry, viewpoint, crop, focal plane, and depth of field |

@@ -8,13 +8,13 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.3.0-black?style=flat-square" alt="Version 2.3.0"></a>
 </p>
 
 [English](README.md) | 简体中文 | [日本語](README.ja.md) | [한국어](README.ko.md)
 
 
-`xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。V2.2 将物理光源、曝光分配、色调风格、拍摄设备响应、皮肤整体色调、局部反射及随尺度与焦点变化的微纹理分开控制。
+`xxg-portrait-rebuild-light` 是用于现有人像照片的 image edit Skill。V2.3 将物理光源、曝光分配、色调风格、拍摄设备响应、皮肤质感与 AI 生图质量修复分开控制。
 
 它强调改变光影，而不是重画人物：保持同一人物、原有五官结构与比例、自然轻微不对称、表情、姿势、镜头和构图；避免塑料皮、颗粒皮、脏灰色差和靠加深皱褶制造的假立体。
 
@@ -34,6 +34,9 @@
 - 支持柔和窗光、商业柔光、伦勃朗光、低调电影光、黄金时刻、双色霓虹和斜向硬光；
 - 可加入一种物理一致的棱镜色散、百叶/格栅条纹光影、雨夜湿面反射、窗影、树影、Bokeh、夕阳光晕、体积光或主体全黑剪影；
 - 新增烛火近场主光和轮廓光主导的人像配方，明确距离衰减、边缘落点与补光强度；
+- 新增 `Q0–Q6` 质量配方，处理重复脏纹/网格、色阶断层、局部编辑接缝、偏色及多轮编辑累积退化；
+- 多轮编辑始终以最初底图作为身份、结构和颜色基准，不使用上一轮原始结果累积偏色与噪点；
+- 只修可见伪缺陷，保留毛孔、发丝、方向性纤维、织物纹理、真实边缘、阴影边界和原焦点层次；
 - 主体与背景分层控制：先定义主光与曝光意图，再定义 Fill、阴影、背景环境光和色温；
 - 保持人物身份、五官大小与位置、表情、姿势、服装、背景结构和原画幅；
 - 面部较小时自动降低微纹理目标，但不会因此取消用户指定的光影变化；
@@ -51,22 +54,23 @@
 Skill 先在内部完成导演式决策：
 
 ```text
-Scope 作用域 → Key L 主光 → Exposure E 曝光 → Skin S/P 皮肤 → Light color T 光色 → Look G 色调风格 → Capture D 拍摄响应 → Atmosphere A 氛围
+Scope 作用域 → Key L 主光 → Exposure E 曝光 → Skin S/P 皮肤 → Light color T 光色 → Look G 色调风格 → Capture D 拍摄响应 → Atmosphere A 氛围 → Quality Q 质量修复
 ```
 
-真正送入图片模型的是四行紧凑英文提示；只有要求调色或设备效果时才增加 `RENDER` 行，通常控制在 55–110 个英文单词：
+真正送入图片模型的是四行紧凑核心提示；仅在要求调色/设备效果时增加 `RENDER`，存在明确质量修复目标时增加 `QUALITY`，通常控制在 55–110 个英文单词：
 
 ```text
 EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
 LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
 RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
 SKIN: One scale-aware S plus one light-consistent P finish.
+QUALITY: One observed Q repair; omit for Q0.
 AVOID: Only two or three source-specific failures.
 ```
 
 不会把身份审计、物体清单、同义负向词和多套摄影风格全部堆进提示，以免互相抵消或直接复制原图。
 
-仅修皮肤时，V2.2 强制使用 `L0 + E0 + T0 + G0 + D0 + A0`。色调校正只改变 E/T/G；设备模拟只改变 G/D 及必要的 E；重照明改变 L/E/T/A。除非明确要求 `optical-restyle`，原机位、透视、裁切、焦平面和景深均保持不变。
+仅修皮肤时，V2.3 强制使用 `L0 + E0 + T0 + G0 + D0 + A0 + Q0`。色调校正只改变 E/T/G；设备模拟只改变 G/D 及必要的 E；重照明改变 L/E/T/A；质量修复只改变 Q。除非明确要求 `optical-restyle`，原机位、透视、裁切、焦平面和景深均保持不变。
 
 `A6` 强制使用 E6 剪影曝光，把有效主光移到人物后方，取消全部补光与眼神光，并让人物内部落为全黑。L/T 及 G/D 处理只作用于背光和背景，S/P 均停用。
 
@@ -75,7 +79,7 @@ AVOID: Only two or three source-specific failures.
 一次只选择：
 
 ```text
-一个 L 主光 + 一个 E 曝光 + 一个 S 皮肤尺度 + 一个 P 皮肤成像 + 一个 T 光色 + 一个 G 色调风格 + 一个 D 拍摄响应 + 零个或一个 A 氛围
+一个 L 主光 + 一个 E 曝光 + 一个 S 皮肤尺度 + 一个 P 皮肤成像 + 一个 T 光色 + 一个 G 色调风格 + 一个 D 拍摄响应 + 零个或一个 A 氛围 + 一个 Q 质量修复
 ```
 
 ### 主光 L
@@ -187,6 +191,18 @@ AVOID: Only two or three source-specific failures.
 | `A7` | 少量沿主光方向出现的棱镜光谱条带或焦散光斑 |
 | `A8` | 符合投影透视的百叶/格栅明暗条纹 |
 | `A9` | 雨滴遵循重力、湿面反光服从主光方向的雨夜氛围 |
+
+### 质量修复 Q
+
+| 编号 | 用途 |
+| --- | --- |
+| `Q0` | 保持当前质量表现，不执行质量修复 |
+| `Q1` | 只清除重复迷宫纹、蚯蚓纹、网格与脏色噪点，保留天然方向性纹理 |
+| `Q2` | 修复色阶断层、色带、海报化与破碎渐变，不模糊真实边缘 |
+| `Q3` | 修复局部编辑接缝、光晕、抠图边和边界成像不一致 |
+| `Q4` | 以最初底图锁定未修改/未授权区域的颜色，同时保留有意改色与光影 |
+| `Q5` | 对照最初底图整合多轮编辑，清除累积偏色、噪点、锐化、压缩、断层和接缝 |
+| `Q6` | 一次最多修复三个明确存在的 Q1–Q4 问题 |
 
 ### 提取的光影预设
 
@@ -360,6 +376,8 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 - E 明确控制高光余量、主体中间调、方向性暗部和黑位；G/D 形成单一一致的色调与拍摄响应，不擅自改变镜头效果；
 - 保持原有肤色，皮肤健康、干净连续；高光受光源约束，分区微纹理只在尺度、焦点与光照允许的位置出现；
 - 不用颗粒、色差、脏灰阴影、局部锐化或加深皱褶冒充真实感；
+- Q 只清除已观察到的生成缺陷，不磨平真实纹理、不模糊边界、不新增调色，也不撤销用户要求的光影与颜色；
+- 多轮编辑始终对照最初底图，历史中间结果不作为生成参考；
 - 窗影、树影、Bokeh、夕阳光晕和光束具有来源与落点；
 - 选择 `A6` 时，整个人物内部必须干净全黑，不显示五官、肤色、发丝、衣物或眼神光细节；身份连续性改由外轮廓、比例、姿态和构图判断；
 - 保持原构图、方向、宽高比和主体占画比例；允许图片模型按其最大分辨率等比例缩小，不要求原始像素尺寸一致。
@@ -370,6 +388,7 @@ openclaw skills install ./xxg-portrait-rebuild-light \
 - [紧凑提示词编译器](references/prompt-recipes.md)
 - [光影、皮肤、色温与氛围配方](references/lighting-skin-color-temperature-recipes.md)
 - [色调、曝光、风格、设备与镜头配方](references/tone-exposure-style-device-recipes.md)
+- [干净画面、颜色锁定与多轮修复配方](references/quality-repair-and-iteration.md)
 - [后端能力说明](references/backend-and-clean-realism.md)
 - [Python 依赖](requirements.txt)
 - [贡献指南](CONTRIBUTING.md)

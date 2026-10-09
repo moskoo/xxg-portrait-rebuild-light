@@ -8,12 +8,12 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.3.0-black?style=flat-square" alt="Version 2.3.0"></a>
 </p>
 
 English | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | [한국어](README.ko.md)
 
-`xxg-portrait-rebuild-light` is an image-edit skill for existing portraits. V2.2 separately controls physical light, exposure placement, color/style grade, capture-device response, broad skin tone, bounded reflection, and scale/focus-aware microdetail.
+`xxg-portrait-rebuild-light` is an image-edit skill for existing portraits. V2.3 separately controls physical light, exposure placement, color/style grade, capture-device response, broad skin tone, bounded reflection, scale/focus-aware microdetail, and AI-generation quality repair.
 
 The skill changes the lighting without redrawing the person. It preserves identity, facial structure and proportions, natural slight asymmetry, expression, pose, camera view, and composition. It avoids plastic skin, grainy skin, dirty color variation, and fake depth made by exaggerating wrinkles.
 
@@ -31,6 +31,9 @@ The skill changes the lighting without redrawing the person. It preserves identi
 - Supports soft window light, commercial soft light, Rembrandt lighting, cinematic low-key lighting, golden hour, dual-color neon, and diagonal hard light.
 - Adds at most one physically coherent atmosphere effect, including prism refraction, blind/lattice shadow lines, rain-wet reflections, window/tree shadow, bokeh, sunset flare, volumetric light, or a full-black silhouette.
 - Adds dedicated candle/flame and rim-led portrait keys with realistic falloff, edge placement, and restrained fill.
+- Adds `Q0–Q6` quality recipes for synthetic dirt/grid patterns, banding, edit seams, color drift, and cumulative multi-round degradation.
+- Uses the first root base—not the previous edit round—as the stable color/identity reference, while retaining intentional new colors and authorized lighting or grading.
+- Repairs only observed artifacts and preserves pores, hair, directional fibers, fabric weave, edges, shadow boundaries, and source focus falloff.
 - Controls subject and background in layers: key light and exposure intent first, then fill, shadows, ambient light, and color temperature.
 - Preserves identity, facial feature size and position, expression, pose, wardrobe, background structure, and source framing.
 - Reduces the skin-detail target automatically when the face is small, without canceling the requested lighting change.
@@ -48,22 +51,23 @@ The skill changes the lighting without redrawing the person. It preserves identi
 The skill first makes a director-style lighting decision internally:
 
 ```text
-Scope → Key L → Exposure E → Fill/Shadow → Skin S/P → Light color T → Look G → Capture D → Atmosphere A
+Scope → Key L → Exposure E → Fill/Shadow → Skin S/P → Light color T → Look G → Capture D → Atmosphere A → Quality Q
 ```
 
-The prompt sent to the image model uses four compact lines, adding `RENDER` only for a requested grade or device response. Target length is 55–110 English words:
+The prompt sent to the image model uses four compact core lines, adding `RENDER` only for a requested grade/device response and `QUALITY` only for an observed repair target. Target length is 55–110 English words:
 
 ```text
 EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
 LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
 RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
 SKIN: One scale-aware S plus one light-consistent P finish.
+QUALITY: One observed Q repair; omit for Q0.
 AVOID: Only two or three source-specific failures.
 ```
 
 The skill does not pile identity audits, object inventories, repeated negatives, and several photographic styles into one prompt. That often causes constraints to cancel each other or produces an unchanged copy.
 
-For skin-only requests, V2.2 forces `L0 + E0 + T0 + G0 + D0 + A0`. Tone correction changes only E/T/G; capture-style changes only G/D and a logically required E. Relighting changes L/E/T/A. Viewpoint, perspective, crop, focal plane, and depth of field stay source-matched unless the user explicitly requests `optical-restyle`.
+For skin-only requests, V2.3 forces `L0 + E0 + T0 + G0 + D0 + A0 + Q0`. Tone correction changes only E/T/G; capture-style changes only G/D and a logically required E; relighting changes L/E/T/A; quality repair changes only Q. Viewpoint, perspective, crop, focal plane, and depth of field stay source-matched unless the user explicitly requests `optical-restyle`.
 
 `A6` forces E6 silhouette exposure, moves the effective light behind the person, removes all fill and catchlights, and renders the subject interior black. L/T and any G/D treatment affect only the rear source and background; S/P are suppressed.
 
@@ -72,7 +76,7 @@ For skin-only requests, V2.2 forces `L0 + E0 + T0 + G0 + D0 + A0`. Tone correcti
 Choose only:
 
 ```text
-one L light + one E exposure + one S skin scale + one P skin finish + one T light color + one G color/style grade + one D capture response + zero or one A atmosphere
+one L light + one E exposure + one S skin scale + one P skin finish + one T light color + one G color/style grade + one D capture response + zero or one A atmosphere + one Q quality repair
 ```
 
 ### Lighting L
@@ -184,6 +188,18 @@ one L light + one E exposure + one S skin scale + one P skin finish + one T ligh
 | `A7` | Prism refraction with a few source-aligned spectral bands or caustic patches |
 | `A8` | Physically projected blind/lattice light-and-shadow lines |
 | `A9` | Rain-wet atmosphere with gravity-consistent droplets and key-shaped reflections |
+
+### Quality repair Q
+
+| Code | Purpose |
+| --- | --- |
+| `Q0` | Preserve current quality behavior; perform no quality repair |
+| `Q1` | Remove only repeating synthetic cellular/maze/grid/chroma residue while preserving natural directional detail |
+| `Q2` | Repair posterization, contour banding, and broken luminance/chroma gradients without blurring real edges |
+| `Q3` | Repair local edit seams, halos, cutout edges, and boundary rendering mismatch |
+| `Q4` | Lock unchanged/unauthorized color relationships to the original root base without undoing intended changes |
+| `Q5` | Consolidate a multi-round edit against the root base and remove accumulated drift, noise, sharpening, compression, banding, and seams |
+| `Q6` | Repair at most three explicitly observed Q1–Q4 defects in one pass |
 
 ### Extracted lighting presets
 
@@ -348,6 +364,27 @@ Use $xxg-portrait-rebuild-light to edit this outdoor portrait with L4 + E1 + S1 
 Broad skylight illuminates the person. Sparse tree shadows break softly across facial and clothing curvature, may cross parts of the eyes and cheeks where physically plausible, and continue into the background in the same direction with source-consistent color and smooth transitions.
 ```
 
+### Clean dirty AI texture and banding
+
+```text
+Use $xxg-portrait-rebuild-light with L0 + E0 + S1 + P0 + T0 + G0 + D0 + A0 + Q6.
+Repair generation quality only. Remove the visible repeating synthetic texture and tonal banding while preserving natural pores, hair, directional fabric fibers, true edges, cast-shadow boundaries, color, framing, focal plane, and depth of field. Do not globally denoise, smooth, sharpen, recolor, or relight the image.
+```
+
+### Restore color after an AI edit
+
+```text
+Use $xxg-portrait-rebuild-light with Q4. Image 1 is the current edit target; Image 2 is the original root base.
+Retain Image 1's intended content and lighting changes. In unchanged or unauthorized regions only, restore Image 2's skin hue, neutral objects, whites, darks, saturation relationships, and lightness curve. Preserve intentional new colors and do not add a compensating green, cyan, or magenta cast.
+```
+
+### Consolidate a degraded multi-round edit
+
+```text
+Use $xxg-portrait-rebuild-light with Q5. Image 1 is the latest accepted edit; Image 2 is the first root base.
+Preserve every intended change in Image 1 once. Use Image 2 only for identity, geometry, framing, original color truth, and clean texture hierarchy. Remove accumulated color drift, repeating noise, sharpening halos, compression residue, banding, and seam buildup without smoothing natural detail or undoing the accepted edit.
+```
+
 ## Output standard
 
 - The target key light, light-to-shadow relationship, or atmosphere effect is immediately visible at normal viewing size.
@@ -357,6 +394,8 @@ Broad skylight illuminates the person. Sparse tree shadows break softly across f
 - E clearly controls highlight headroom, subject midtones, directional shadows, and black point; G/D produce one coherent palette and capture response without unauthorized optical change.
 - Source complexion remains clean and continuous, with bounded source-shaped highlights and regional detail limited by scale, focus, and illumination.
 - Grain, added marks, random color variation, global sharpening, and darker facial lines are never used to imitate realism.
+- Q removes only observed generation defects; it does not flatten real texture, blur boundaries, introduce a new grade, or undo requested lighting/color changes.
+- Multi-round work always compares the current accepted edit with the first root base; intermediate raw rounds are not generation references.
 - Window shadows, tree shadows, bokeh, sunset flare, and light beams have a plausible source and landing area.
 - With `A6`, the complete subject interior is clean black with no facial, skin, hair, clothing, or catchlight detail; identity continuity is judged from the preserved outer contour, proportions, pose, and framing.
 - Preserve composition, orientation, aspect ratio, and the subject's share of the frame. Proportional downscaling to an image model's maximum resolution is allowed; exact source pixel dimensions are not required.
@@ -367,6 +406,7 @@ Broad skylight illuminates the person. Sparse tree shadows break softly across f
 - [Compact prompt compiler](references/prompt-recipes.md)
 - [Lighting, skin, color-temperature, and atmosphere recipes](references/lighting-skin-color-temperature-recipes.md)
 - [Tone, exposure, color/style, device, and optics recipes](references/tone-exposure-style-device-recipes.md)
+- [Clean-frame quality, color-lock, and iterative-repair recipes](references/quality-repair-and-iteration.md)
 - [Backend capability notes](references/backend-and-clean-realism.md)
 - [Python dependencies](requirements.txt)
 - [Contributing guide](CONTRIBUTING.md)

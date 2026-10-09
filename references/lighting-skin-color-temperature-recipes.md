@@ -1,4 +1,4 @@
-# V2.2 Lighting, Skin, Finish, Color, and Atmosphere Recipes
+# V2.3 Lighting, Skin, Finish, Color, and Atmosphere Recipes
 
 ## Contents
 
@@ -18,7 +18,7 @@ Choose exactly `one L + one E + one S + one P + one T + one G + one D + zero or 
 
 | Scope | Required behavior |
 | --- | --- |
-| `texture-only` | Force `L0 + E0 + T0 + G0 + D0 + A0`; preserve source highlight placement, exposure, white balance, shadow transitions, focal plane, depth of field, and environment. Use S + P0/P1 only. |
+| `texture-only` | Force `L0 + E0 + T0 + G0 + D0 + A0 + Q0`; preserve source highlight placement, exposure, white balance, shadow transitions, focal plane, depth of field, environment, and quality behavior. Use S + P0/P1 only. |
 | `tone-and-exposure` | Keep L0 and source optics; authorize only the requested E/T/G corrections. |
 | `relight-and-skin` | Apply selected L/E/T/A consistently to subject and environment; preserve source optics and identity while adapting S/P. |
 | `capture-style` | Keep physical light unless requested; apply G/D and only a logically required E while preserving viewpoint, crop, focus, and DOF. |
@@ -33,7 +33,7 @@ Default to E0 for preservation and E1 for natural relighting. E5/E6/E7 require a
 
 | Requested result | Combination |
 | --- | --- |
-| Skin fidelity only | `L0 + E0 + Sx + P0/P1 + T0 + G0 + D0 + A0` |
+| Skin fidelity only | `L0 + E0 + Sx + P0/P1 + T0 + G0 + D0 + A0 + Q0` |
 | Tone/exposure correction | `L0 + E1/E2/E3 + Sx + P0 + T0/T7 + G0/G1 + D0 + A0` |
 | Natural backlight | `L1 + E2 + Sx + P2 + T1 + G0 + D0 + A0` |
 | Soft window light | `L2 + E1 + Sx + P2 + T1 + G0/G1 + D0/D2 + A0/A1` |
@@ -118,6 +118,7 @@ A whole-face gloss layer fails every P. A fully dead-matte result also fails unl
 - Force `E6`, `exposure_intent: silhouette`, `fill_policy: none`, and `shadow_policy: silhouette`.
 - Retain from L only the rear source and background treatment; remove all subject-facing illumination.
 - Omit both S and P. Apply T, G, and D only to the source/background; none may restore subject detail.
+- Q may repair the background only; it must not reveal, reconstruct, or texture the silhouette interior.
 - Fail if any facial feature, skin color, catchlight, lit hair strand, garment texture, accessory shading, or gray fill remains inside.
 
 ## Color-Temperature Recipes T

@@ -1,8 +1,8 @@
-# V2.2 Identity, Skin, Light, Tone, Capture, and Optics Validation
+# V2.3 Identity, Skin, Light, Tone, Capture, Quality, and Optics Validation
 
 ## Contents
 
-[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-signature-gate) · [Skin](#skin-realism-gate) · [Focus](#focus-and-detail-distribution-gate) · [Lighting](#lighting-gate) · [Tone/capture](#tone-grade-and-capture-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate)
+[Evidence](#evidence-record) · [Strict protection](#strict-protection-gate) · [Face scale](#face-scale-gate) · [Identity](#identity-signature-gate) · [Skin](#skin-realism-gate) · [Focus](#focus-and-detail-distribution-gate) · [Lighting](#lighting-gate) · [Tone/capture](#tone-grade-and-capture-gate) · [Quality](#quality-and-iteration-gate) · [Framing](#aspect-ratio-and-composition-gate) · [Improvement](#target-improvement-gate)
 
 ## Evidence Record
 
@@ -10,7 +10,7 @@ Follow [the backend contract](backend-and-clean-realism.md). When a result exist
 
 ```yaml
 source_size: [W, H]
-operation_scope: texture-only | tone-and-exposure | relight-and-skin | capture-style | optical-restyle
+operation_scope: texture-only | tone-and-exposure | relight-and-skin | capture-style | optical-restyle | quality-repair | base-color-repair | multi-round-repair
 face_box: [x1, y1, x2, y2]
 face_top_y: y_top
 chin_y: y_chin
@@ -25,6 +25,11 @@ recipes:
   color_grade: G0
   capture_profile: D0
   atmosphere: A0
+  quality: Q0
+references:
+  current_edit: path-or-id
+  root_base: path-or-id-or-null
+  root_base_role: none | identity-geometry-color | identity-geometry-only
 light:
   mode: match-source | relight
   exposure_intent: source-matched | balanced | highlight-priority | shadow-priority | low-key | silhouette | high-key
@@ -111,7 +116,7 @@ At normal size, skin must read clean, continuous, and dimensional before any mic
 
 ## Tone, Grade, and Capture Gate
 
-Compare the result with the selected E/G/D definitions in [the V2.2 tone and capture recipes](tone-exposure-style-device-recipes.md).
+Compare the result with the selected E/G/D definitions in [the V2.3 tone and capture recipes](tone-exposure-style-device-recipes.md).
 
 | Layer | Pass | Fail |
 | --- | --- | --- |
@@ -122,6 +127,21 @@ Compare the result with the selected E/G/D definitions in [the V2.2 tone and cap
 | Optics | Viewpoint, perspective, crop, focal plane, and DOF remain source-matched unless `optical-restyle` is explicit. | A capture-style request changes camera position, facial perspective, crop, or background blur without authorization. |
 
 For a brand-named request, validate the compiled capture behavior, not unverifiable claims about exact manufacturer color science.
+
+## Quality and Iteration Gate
+
+Compare the result with the selected Q definition in [the V2.3 quality reference](quality-repair-and-iteration.md).
+
+| Signal | Pass | Fail |
+| --- | --- | --- |
+| Synthetic residue | Named repeating cellular/grid/chroma artifact is removed only where present; clean material continuity returns. | Dirty veil remains, natural texture is flattened, or a new artificial texture is added. |
+| Natural detail | Pores, hair, directional fibers, fabric weave, true edges, and focal falloff remain scale-appropriate and nonrepeating. | Waxy surfaces, whole-frame smoothing, global sharpening, repeated texture, or lost edge hierarchy. |
+| Gradient continuity | Skin shadows, walls, sky, haze, and bokeh have continuous luminance/chroma roll-off. | Posterization, contour steps, hue bands, blotches, or blurred real shadow/object edges. |
+| Edit boundary | Exposure, white balance, saturation, sharpness, noise, depth, haze, shadow, and reflection transition naturally. | Rectangle seam, halo, doubled contour, cutout edge, or abrupt texture/sharpness change. |
+| Base color lock | Only unchanged/unauthorized regions return toward root skin hue, neutrals, whites, darks, saturation, and lightness. | Intended colors or selected E/T/G/A are rolled back, or a compensating green/cyan/magenta cast appears. |
+| Multi-round quality | Current accepted changes remain once; frame is no noisier, dirtier, sharper, more compressed, tinted, banded, or seamed merely because it is a later round. | Intermediate states blend together, accepted edits disappear, or cumulative defects remain/amplify. |
+
+If no root base exists, do not claim exact color restoration. Judge only visible cast normalization against skin and neutral objects. Prompt wording alone cannot establish protected-pixel identity.
 
 ## Aspect-Ratio and Composition Gate
 
@@ -147,6 +167,9 @@ Define `acceptance_view` and `acceptance_criterion` before generation. Afterward
 - `relight-and-skin`: requested L/E/T/A direction, tonal consequence, background response, and skin reflectance are immediately legible and coherent.
 - `capture-style`: requested G/D response is visible without changing viewpoint, crop, focal plane, or DOF.
 - `optical-restyle`: the requested optical consequence is visible and facial geometry remains stable; assess authorized framing changes separately.
+- `quality-repair`: the selected Q defect is visibly reduced at normal size without changing light/color/structure or flattening natural detail.
+- `base-color-repair`: unchanged/unauthorized regions agree with the root base while intentional recolors and authorized E/T/G/A remain intact.
+- `multi-round-repair`: accepted current edits remain once and accumulated color/noise/sharpening/compression/banding/seam residue is reduced against the root base.
 - Fail whole-face gloss, fully dead-matte flattening, texture overlay, uniform sharpness, unintended dimming, complexion change, or identity drift.
 - A6: require a black interior plus original outline, proportions, pose, and placement.
 
@@ -154,4 +177,4 @@ For strict results, run `scripts/validate_result_assessment.py`. Any required ta
 
 ## Final Decision
 
-Any applicable failure in identity signature, light/scope, exposure, grade, capture response, skin realism, focus distribution, framing, frozen regions, or target improvement disqualifies the image. State `This image did not achieve the requested improvement` and return a compact prompt recompiled from source. Never present or locally repair a failed image.
+Any applicable failure in identity signature, light/scope, exposure, grade, capture response, quality, skin realism, focus distribution, framing, frozen regions, or target improvement disqualifies the image. State `This image did not achieve the requested improvement` and return a compact prompt recompiled from source. Never present or locally repair a failed image.

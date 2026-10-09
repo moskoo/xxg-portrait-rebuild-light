@@ -1,4 +1,4 @@
-# V2.2 Backend Capability and Clean Realism
+# V2.3 Backend Capability and Clean Realism
 
 ## Delivery Modes
 
@@ -48,6 +48,9 @@ Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are no
 | `relight-and-skin` | Authorize selected L/E/T/A and scene-wide response; preserve source identity, focal plane, DOF, framing, and object structure. |
 | `capture-style` | Authorize selected G/D and logically required E; preserve viewpoint, crop, focal plane, DOF, identity, and scene structure. |
 | `optical-restyle` | Authorize only explicitly requested perspective/focal/DOF change; preserve facial feature geometry and all unrelated content. |
+| `quality-repair` | Authorize one Q repair only; preserve L/E/T/G/D/A, optics, identity, scene structure, and natural texture. |
+| `base-color-repair` | Authorize Q4 only in unchanged/unauthorized regions; preserve intended recolors and requested E/T/G/A. |
+| `multi-round-repair` | Use current edit plus root base; authorize Q5 while preserving each accepted current change once. |
 | Verified `strict-local` | Execute the validated local edit plan; deliver a strict final only after every gate passes. |
 | `full-frame-generative` | Generate the full frame as best effort; keep one clear visible target and reduce redraw/detail ambition. |
 | Face `<256 px` | Disable added microdetail; retain tone/reflection and the full scene-level lighting target. |
@@ -56,7 +59,7 @@ Pillow, NumPy, OpenCV, ImageMagick, FFmpeg, `sips`, and temporary filters are no
 
 For full-frame edits, separate `structural_invariants`, `authorized_appearance_changes`, and one `minimum_visible_improvement` observable at normal size. An almost unchanged result cannot pass as restrained processing.
 
-## V2.2 Clean Optical Realism
+## V2.3 Clean Optical Realism
 
 | Signal | Pass | Fail |
 | --- | --- | --- |
@@ -94,6 +97,16 @@ Treat source marks as identity anchors without naming or amplifying them in the 
 
 Off-camera window confidence: `high` requires a visible window or at least three consistent evidence classes and permits explicit relighting; `medium` requires two and permits low-amplitude correction; `low` uses `match-source`.
 
+## Quality and Iteration Boundaries
+
+- Q is independent of L/E/T/G/D/A. Quality cleanup may not invent a new light, grade, capture profile, or skin finish.
+- For synthetic dirt, distinguish repeating cellular/grid/chroma residue from real directional fibers, pores, hair, fabric weave, edges, and focus falloff. Never denoise the full frame by default.
+- For banding, repair broken luminance/chroma continuity while retaining object edges, cast-shadow boundaries, local contrast, and black point.
+- For local seams, match boundary exposure, white balance, saturation, sharpness, noise, depth, haze, shadow, and reflection. Do not hide a seam with global blur.
+- For color drift, compare unchanged or unauthorized regions with the first root base. Preserve deliberate new colors and authorized E/T/G/A behavior.
+- For repeated edits, attach only current target plus root base. Use the repaired current output before the next round; never treat an intermediate raw round as color truth.
+- Full-frame prompt constraints are probabilistic. Do not claim frozen pixels and do not use local raster filters to produce the delivered repair.
+
 ## Failure Mapping
 
 | Failure | Action |
@@ -110,3 +123,9 @@ Off-camera window confidence: `high` requires a visible window or at least three
 | Blind shadows look like an overlay | Restore one projection direction, repeated spacing, edge hardness, perspective, and continuation onto a nearby surface. |
 | Candlelight becomes orange fill | Keep one low near-field flame, rapid falloff, weak bounce, and a neutral-deep black point. |
 | Rain/wet effect dirties skin | Restrict droplets and wet highlights to gravity and key-facing planes; restore clean continuous complexion elsewhere. |
+| Repeating dirt/grid remains | Use Q1 only on the affected material; restore clean continuity while preserving natural directional detail. |
+| Repair creates waxy or flat surfaces | Remove global denoise/smoothing; restore pores, fibers, hair, edges, bounded reflection, and source focus falloff. |
+| Tonal/chroma banding remains | Use Q2 on the named gradient; preserve true edges, shadow boundaries, local contrast, and black point. |
+| Local edit boundary remains visible | Use Q3 to match boundary light/color/sharpness/noise/depth/haze/reflection without blurring the region. |
+| Color lock undoes an intentional look | Restrict Q4 to unchanged/unauthorized regions and exempt selected E/T/G/A behavior. |
+| Multi-round result keeps degrading | Use Q5 with current edit plus root base only; remove accumulated residue while preserving accepted changes once. |

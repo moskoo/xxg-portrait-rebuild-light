@@ -8,13 +8,13 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.3.0-black?style=flat-square" alt="Version 2.3.0"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | 日本語 | [한국어](README.ko.md)
 
 
-`xxg-portrait-rebuild-light` は既存のポートレート写真を対象とする image edit Skill です。V2.2 は、物理光、露出配置、色調・スタイル、撮影機器の応答、肌の広域色調、局所反射、スケールと焦点に応じた微細質感を分離して制御します。
+`xxg-portrait-rebuild-light` は既存のポートレート写真を対象とする image edit Skill です。V2.3 は物理光、露出、色調、撮影応答、肌表現、AI 生成品質の修復を分離して制御します。
 
 人物を描き直すのではなく、光を変えることを重視します。同一人物であること、顔の構造と比率、自然なわずかな左右差、表情、ポーズ、カメラ視点、構図を維持し、プラスチック肌、粒状肌、汚れた色むら、しわを強調して作る偽の立体感を避けます。
 
@@ -34,6 +34,9 @@
 - 柔らかな窓光、商業用ソフトライト、レンブラント光、映画的ローキー、ゴールデンアワー、2 色ネオン、斜めの硬い光に対応。
 - プリズム分光、ブラインド／格子の縞影、雨で濡れた反射、窓影、木漏れ日、ボケ、夕日フレア、ボリュームライト、全黒シルエットから物理的に整合する効果を最大 1 種類追加。
 - 距離減衰、縁の位置、フィル量を定義した蝋燭／炎の近接キーとリム主導の人物光を追加。
+- `Q0–Q6` で反復する汚れ／グリッド、バンディング、編集継ぎ目、色かぶり、複数回編集による劣化を修復。
+- 複数回編集では直前の未修正画像ではなく、最初のルート画像を同一性・構造・色の基準として維持。
+- 毛穴、髪、方向性のある繊維、織り、実エッジ、影境界、元の焦点階層を残し、観測された偽の欠陥だけを修復。
 - 主体と背景を分けて制御し、キーライトと露出意図を先に決め、その後にフィル、影、背景環境光、色温度を定義。
 - 人物の同一性、顔パーツの大きさと位置、表情、ポーズ、衣装、背景構造、元のフレーミングを保持。
 - 顔が小さい場合は肌の微細質感の目標だけを自動的に下げ、指定された光の変化は維持。
@@ -51,22 +54,23 @@
 Skill は最初に内部でディレクター式の判断を行います。
 
 ```text
-Scope 作用範囲 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A
+Scope 作用範囲 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A → Quality Q
 ```
 
-画像モデルへは英語 4 行を送り、色調または機器効果を求める場合だけ `RENDER` 行を追加します。通常は 55〜110 語です。
+画像モデルへは英語の基本 4 行を送り、色調／機器効果には `RENDER`、観測された品質修復には `QUALITY` だけを追加します。通常は 55〜110 語です。
 
 ```text
 EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
 LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
 RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
 SKIN: One scale-aware S plus one light-consistent P finish.
+QUALITY: One observed Q repair; omit for Q0.
 AVOID: Only two or three source-specific failures.
 ```
 
 同一性監査、物体一覧、重複するネガティブ語、複数の撮影スタイルを一つのプロンプトに詰め込みません。制約同士が相殺されたり、元画像がそのまま複製されたりするのを防ぐためです。
 
-肌だけを直す場合、V2.2 は `L0 + E0 + T0 + G0 + D0 + A0` を強制します。色調補正は E/T/G、機器模倣は G/D と必要な E、再照明は L/E/T/A だけを変更します。`optical-restyle` が明示されない限り、視点、遠近、クロップ、焦点面、被写界深度を維持します。
+肌だけを直す場合、V2.3 は `L0 + E0 + T0 + G0 + D0 + A0 + Q0` を強制します。色調補正は E/T/G、機器模倣は G/D と必要な E、再照明は L/E/T/A、品質修復は Q だけを変更します。`optical-restyle` が明示されない限り、視点、遠近、クロップ、焦点面、被写界深度を維持します。
 
 `A6` は E6 シルエット露出を強制し、有効な主光を人物の後方へ移し、フィルとキャッチライトをなくして人物内部を黒にします。L/T と G/D は逆光と背景だけに作用し、S/P は無効です。
 
@@ -75,7 +79,7 @@ AVOID: Only two or three source-specific failures.
 一度に選ぶのは次の組み合わせだけです。
 
 ```text
-L 光を 1 つ + E 露出を 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1 つ + T 光色を 1 つ + G 色調を 1 つ + D 撮影応答を 1 つ + A 雰囲気を 0 または 1 つ
+L 光を 1 つ + E 露出を 1 つ + S 肌スケールを 1 つ + P 肌仕上げを 1 つ + T 光色を 1 つ + G 色調を 1 つ + D 撮影応答を 1 つ + A 雰囲気を 0 または 1 つ + Q 品質修復を 1 つ
 ```
 
 ### ライティング L
@@ -187,6 +191,18 @@ L 光を 1 つ + E 露出を 1 つ + S 肌スケールを 1 つ + P 肌仕上げ
 | `A7` | キー方向に沿う少数のプリズム分光帯／コースティクス |
 | `A8` | 投影遠近が整合するブラインド／格子の明暗縞 |
 | `A9` | 重力に沿う雨滴とキー方向の濡れ反射を持つ雨夜効果 |
+
+### 品質修復 Q
+
+| コード | 用途 |
+| --- | --- |
+| `Q0` | 現在の品質を維持し、修復しない |
+| `Q1` | 反復する迷路状／虫状／グリッド／色ノイズだけを除去し、自然な方向性質感を保持 |
+| `Q2` | ポスタリゼーション、バンディング、壊れた階調を実エッジをぼかさず修復 |
+| `Q3` | 局所編集の継ぎ目、ハロー、切り抜き境界、境界レンダリング差を修復 |
+| `Q4` | 意図した色・光を残し、未変更／未許可領域の色を最初のルート画像へ固定 |
+| `Q5` | ルート画像を基準に複数回編集の色ずれ、ノイズ、過剰シャープ、圧縮、段差、継ぎ目を統合修復 |
+| `Q6` | 同時に存在する Q1–Q4 の問題を最大三つまで一度に修復 |
 
 ### 抽出した光影プリセット
 
@@ -360,6 +376,8 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + E1 + S1 + 
 - E はハイライト余裕、人物の中間調、方向性のある影、黒レベルを明確に制御し、G/D は光学系を無断変更せず一つの色調と撮影応答を作る。
 - 元の肌色を維持し、肌は健康的で清潔かつ連続する。ハイライトは光源に限定され、部位別の微細質感はスケール、焦点、光が解像する場所だけに現れる。
 - 粒子、色ノイズ、汚れた灰色の影、局所的な過剰シャープ、強調したしわでリアリティを偽装しない。
+- Q は観測された生成欠陥だけを除去し、自然な質感、境界、要求された光・色調を変えない。
+- 複数回編集は常に最初のルート画像と比較し、中間の生画像を生成参照にしない。
 - 窓影、木漏れ日、ボケ、夕日のフレア、光線には妥当な光源と落下位置がある。
 - `A6` では人物内部全体を清潔な黒にし、顔、肌、髪、衣服、キャッチライトのディテールを残さない。同一性は外輪郭、比率、姿勢、フレーミングの維持で判定する。
 - 元の構図、方向、アスペクト比、画面内の人物比率を維持する。画像モデルの最大解像度に合わせた等比縮小は許容し、元画像と同一のピクセル寸法は要求しない。
@@ -370,6 +388,7 @@ $xxg-portrait-rebuild-light でこの屋外ポートレートを L4 + E1 + S1 + 
 - [簡潔プロンプトコンパイラ](references/prompt-recipes.md)
 - [光・肌・色温度・雰囲気レシピ](references/lighting-skin-color-temperature-recipes.md)
 - [色調・露出・スタイル・機器・光学レシピ](references/tone-exposure-style-device-recipes.md)
+- [クリーンフレーム・色固定・反復修復レシピ](references/quality-repair-and-iteration.md)
 - [バックエンド機能の説明](references/backend-and-clean-realism.md)
 - [Python 依存関係](requirements.txt)
 - [コントリビューションガイド](CONTRIBUTING.md)

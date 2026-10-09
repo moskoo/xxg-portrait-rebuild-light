@@ -12,7 +12,13 @@
     "color_temperature": "T1",
     "color_grade": "G0",
     "capture_profile": "D0",
-    "atmosphere": "A0"
+    "atmosphere": "A0",
+    "quality": "Q0"
+  },
+  "reference_roles": {
+    "current_edit": "/absolute/path/source.png",
+    "root_base": null,
+    "root_base_role": "none"
   },
   "optics_policy": {
     "optical_restyle_requested": false,
@@ -91,6 +97,12 @@
       "required": false,
       "acceptance_view": "Full frame at normal viewing size",
       "acceptance_criterion": "When G or D differs from source, the requested palette, curve, highlight behavior, microcontrast, sharpening, and dynamic-range response are visible while source viewpoint, crop, focal plane, and depth of field remain stable."
+    },
+    {
+      "id": "clean-frame-quality",
+      "required": false,
+      "acceptance_view": "Full frame at normal size plus affected gradients, materials, and edit boundaries at 200%–400%",
+      "acceptance_criterion": "When Q differs from source, the named synthetic residue, banding, seam, color drift, or cumulative edit degradation is visibly reduced without smoothing natural detail, changing unauthorized light/color/structure, or undoing accepted edits."
     }
   ]
 }

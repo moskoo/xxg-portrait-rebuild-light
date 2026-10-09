@@ -8,12 +8,12 @@
   <a href=""><img src="https://img.shields.io/badge/CodeX-Skill-green.svg?style=flat-square" alt="codex"></a>
   <a href=""><img src="https://img.shields.io/badge/Claude-Skill-yellow.svg?style=flat-square" alt="Claude"></a>
   <a href=""><img   src="https://img.shields.io/badge/Open-Claw-8A2BE2.svg?style=flat-square" alt="OpenClaw"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.2.0-black?style=flat-square" alt="Version 2.2.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/Version-2.3.0-black?style=flat-square" alt="Version 2.3.0"></a>
 </p>
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md) | 한국어
 
-`xxg-portrait-rebuild-light`는 기존 인물 사진을 위한 image edit Skill입니다. V2.2는 물리 조명, 노출 배치, 색조·스타일, 촬영 장치 응답, 피부의 넓은 색조, 제한된 반사, 크기와 초점에 따른 미세 질감을 분리해 제어합니다.
+`xxg-portrait-rebuild-light`는 기존 인물 사진을 위한 image edit Skill입니다. V2.3은 물리 조명, 노출, 색조, 촬영 응답, 피부 표현, AI 생성 품질 복구를 분리해 제어합니다.
 
 인물을 다시 그리는 것이 아니라 조명을 바꾸는 데 중점을 둡니다. 동일 인물, 기존 얼굴 구조와 비율, 자연스러운 미세 비대칭, 표정, 자세, 카메라 시점, 구도를 유지하며 플라스틱 피부, 거친 입자 피부, 지저분한 색 얼룩, 주름을 과장해 만든 가짜 입체감을 방지합니다.
 
@@ -33,6 +33,9 @@
 - 부드러운 창문광, 상업용 소프트 라이트, 렘브란트 조명, 시네마틱 로우키, 골든아워, 이중 컬러 네온, 사선 하드 라이트를 지원합니다.
 - 프리즘 분광, 블라인드/격자 줄무늬, 비에 젖은 반사, 창문·나뭇잎 그림자, 보케, 석양 플레어, 볼류메트릭 라이트, 완전 검은 실루엣 중 물리적으로 일관된 효과 하나를 추가합니다.
 - 거리 감쇠, 가장자리 위치, 필 강도를 정의한 촛불/불꽃 근거리 키와 림 중심 인물 조명을 추가합니다.
+- `Q0–Q6`으로 반복 오염/그리드, 밴딩, 편집 경계, 색 편이, 다회 편집 누적 열화를 복구합니다.
+- 다회 편집에서는 직전 원시 결과가 아니라 최초 루트 이미지를 정체성·구조·색 기준으로 유지합니다.
+- 모공, 머리카락, 방향성 섬유, 직조, 실제 경계, 그림자 경계, 원본 초점 계층을 보존하고 관찰된 가짜 결함만 수정합니다.
 - 피사체와 배경을 계층적으로 제어합니다. 먼저 키 라이트와 노출 의도를 정하고 필, 그림자, 배경 주변광, 색온도를 정의합니다.
 - 인물 정체성, 얼굴 요소의 크기와 위치, 표정, 자세, 의상, 배경 구조, 원본 프레이밍을 유지합니다.
 - 얼굴이 작으면 피부 미세 질감 목표만 자동으로 낮추고 요청된 조명 변화는 유지합니다.
@@ -51,22 +54,23 @@
 Skill은 먼저 내부에서 디렉터식 결정을 수행합니다.
 
 ```text
-Scope 작업 범위 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A
+Scope 작업 범위 → Key L → Exposure E → Skin S/P → Light color T → Look G → Capture D → Atmosphere A → Quality Q
 ```
 
-이미지 모델에는 영어 네 줄을 전달하며 색조 또는 장치 효과를 요청할 때만 `RENDER` 줄을 추가합니다. 보통 55–110단어입니다.
+이미지 모델에는 영어 핵심 네 줄을 전달하며 색조/장치 효과에는 `RENDER`, 관찰된 품질 복구에는 `QUALITY`만 추가합니다. 보통 55–110단어입니다.
 
 ```text
 EDIT: Choose the smallest authorized scope; retain source identity, geometry, pose, camera view, optics, framing, and every unauthorized axis.
 LIGHT: One L and E with explicit highlight, midtone, shadow, black-point, background, T, and optional A behavior.
 RENDER: One G palette/curve plus one D capture response. Omit for G0 + D0.
 SKIN: One scale-aware S plus one light-consistent P finish.
+QUALITY: One observed Q repair; omit for Q0.
 AVOID: Only two or three source-specific failures.
 ```
 
 정체성 감사, 물체 목록, 반복되는 부정어, 여러 사진 스타일을 하나의 프롬프트에 쌓지 않습니다. 제약이 서로 상쇄되거나 원본이 그대로 복제되는 현상을 줄이기 위해서입니다.
 
-피부만 수정할 때 V2.2는 `L0 + E0 + T0 + G0 + D0 + A0`을 강제합니다. 색조 보정은 E/T/G, 장치 모사는 G/D와 필요한 E, 재조명은 L/E/T/A만 변경합니다. `optical-restyle`이 명시되지 않으면 시점, 원근, 크롭, 초점면, 심도를 유지합니다.
+피부만 수정할 때 V2.3은 `L0 + E0 + T0 + G0 + D0 + A0 + Q0`을 강제합니다. 색조 보정은 E/T/G, 장치 모사는 G/D와 필요한 E, 재조명은 L/E/T/A, 품질 복구는 Q만 변경합니다. `optical-restyle`이 명시되지 않으면 시점, 원근, 크롭, 초점면, 심도를 유지합니다.
 
 `A6`은 E6 실루엣 노출을 강제하고 유효한 주광을 인물 뒤로 옮기며 필 라이트와 캐치라이트를 제거해 인물 내부를 검정으로 만듭니다. L/T와 G/D는 역광과 배경에만 적용되고 S/P는 비활성화됩니다.
 
@@ -75,7 +79,7 @@ AVOID: Only two or three source-specific failures.
 한 번에는 다음만 선택합니다.
 
 ```text
-L 조명 하나 + E 노출 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 광색 하나 + G 색조 하나 + D 촬영 응답 하나 + A 분위기 0개 또는 1개
+L 조명 하나 + E 노출 하나 + S 피부 크기 하나 + P 피부 마감 하나 + T 광색 하나 + G 색조 하나 + D 촬영 응답 하나 + A 분위기 0개 또는 1개 + Q 품질 복구 하나
 ```
 
 ### 조명 L
@@ -187,6 +191,18 @@ L 조명 하나 + E 노출 하나 + S 피부 크기 하나 + P 피부 마감 하
 | `A7` | 키 방향을 따르는 소수의 프리즘 분광 띠 또는 코스틱 패치 |
 | `A8` | 투영 원근이 일치하는 블라인드/격자 명암 줄무늬 |
 | `A9` | 중력을 따르는 빗방울과 키 방향의 젖은 반사를 갖는 우천 분위기 |
+
+### 품질 복구 Q
+
+| 코드 | 용도 |
+| --- | --- |
+| `Q0` | 현재 품질 특성을 유지하고 복구하지 않음 |
+| `Q1` | 반복 미로형/벌레형/그리드/색 노이즈만 제거하고 자연스러운 방향성 질감 보존 |
+| `Q2` | 포스터라이징, 밴딩, 끊어진 명도·색 그라데이션을 실제 경계를 흐리지 않고 복구 |
+| `Q3` | 국부 편집 이음새, 헤일로, 컷아웃 경계, 경계 렌더링 불일치를 복구 |
+| `Q4` | 의도한 색과 조명을 유지하며 미변경/비허용 영역 색을 최초 루트 이미지에 고정 |
+| `Q5` | 루트 이미지 기준으로 다회 편집의 색 편이, 노이즈, 과도한 샤프닝, 압축, 밴딩, 이음새를 통합 복구 |
+| `Q6` | 동시에 존재하는 Q1–Q4 문제를 최대 세 가지까지 한 번에 복구 |
 
 ### 추출한 조명 프리셋
 
@@ -360,6 +376,8 @@ $xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + E1 + S1 + P2 + T
 - E는 하이라이트 여유, 피사체 중간톤, 방향성 그림자와 블랙 포인트를 명확히 제어하고 G/D는 광학을 임의로 바꾸지 않으며 하나의 일관된 색조와 촬영 응답을 만듭니다.
 - 원본 피부색을 유지하며 피부는 건강하고 깨끗하고 연속적입니다. 하이라이트는 광원에 한정되고 부위별 미세 질감은 크기, 초점, 빛이 허용하는 곳에만 나타납니다.
 - 입자, 색 노이즈, 지저분한 회색 그림자, 국부 과도 샤프닝, 과장된 주름으로 사실감을 흉내 내지 않습니다.
+- Q는 관찰된 생성 결함만 제거하며 자연 질감, 경계, 요청된 조명과 색조를 바꾸지 않습니다.
+- 다회 편집은 항상 최초 루트 이미지와 비교하고 중간 원시 결과는 생성 참조로 사용하지 않습니다.
 - 창문 그림자, 나뭇잎 그림자, 보케, 석양 플레어, 광선에는 타당한 광원과 투영 위치가 있습니다.
 - `A6`에서는 인물 내부 전체가 깨끗한 검정이어야 하며 얼굴, 피부, 머리카락, 의상 또는 캐치라이트 디테일이 남지 않아야 합니다. 동일 인물 여부는 보존된 외곽선, 비율, 자세와 프레이밍으로 판단합니다.
 - 원본 구도, 방향, 화면비, 프레임 내 피사체 비율을 유지합니다. 이미지 모델의 최대 해상도에 맞춘 비례 축소는 허용하며 원본과 동일한 픽셀 크기는 요구하지 않습니다.
@@ -370,6 +388,7 @@ $xxg-portrait-rebuild-light로 이 야외 인물 사진을 L4 + E1 + S1 + P2 + T
 - [간결 프롬프트 컴파일러](references/prompt-recipes.md)
 - [조명·피부·색온도·분위기 레시피](references/lighting-skin-color-temperature-recipes.md)
 - [색조·노출·스타일·장치·광학 레시피](references/tone-exposure-style-device-recipes.md)
+- [클린 프레임·색 고정·다회 편집 복구 레시피](references/quality-repair-and-iteration.md)
 - [백엔드 기능 설명](references/backend-and-clean-realism.md)
 - [Python 의존성](requirements.txt)
 - [기여 가이드](CONTRIBUTING.md)
